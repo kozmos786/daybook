@@ -1,0 +1,15 @@
+{
+  "name": "personal-task-planner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A private, local-first personal task planner.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "node --check server.js && node --check src/model.js && node --check src/storage.js && node --check src/app.js"
+  }
+}

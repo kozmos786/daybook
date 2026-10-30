@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Daybook - Personal task planner</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/src/styles.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#task-title">Skip to new task</a>
+  <div class="app">
+    <aside class="sidebar" aria-label="Workspace">
+      <a class="brand" href="/" aria-label="Daybook home"><span class="brand-mark" aria-hidden="true">D</span>daybook<span class="brand-dot">.</span></a>
+      <p class="eyebrow">A LITTLE SPACE TO GET THINGS DONE</p>
+      <section aria-labelledby="lists-heading">
+        <div class="section-heading"><h2 id="lists-heading">Your lists</h2><span class="small-label">PERSONAL</span></div>
+        <nav id="list-navigation" aria-label="Task lists"></nav>
+        <form id="list-form">
+          <label for="list-name">New list</label>
+          <div class="inline"><input id="list-name" name="name" placeholder="e.g. Around the house" required><button type="submit" class="icon-button" aria-label="Create list">+</button></div>
+        </form>
+        <button type="button" id="delete-list" class="quiet danger" hidden>Delete selected list</button>
+      </section>
+      <section class="data-tools" aria-labelledby="files-heading">
+        <h2 id="files-heading">Your data, your space</h2>
+        <p>Saved in this browser. No accounts. No cloud.</p>
+        <button id="export" type="button" class="secondary full-width">Export JSON backup</button>
+        <button id="import" type="button" class="secondary full-width">Import a file</button>
+        <input type="file" id="import-file" accept=".json,.txt,application/json,text/plain" hidden>
+        <p class="file-hint">JSON restores a backup. TXT adds one task per line to Inbox.</p>
+      </section>
+      <p class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span> LOCAL &amp; PRIVATE</p>
+    </aside>
+    <main id="main">
+      <header class="page-header">
+        <div><p class="eyebrow" id="current-date"></p><h1>A clearer day starts here<span>.</span></h1><p class="subtitle">Make a little room for what matters.</p></div>
+        <span class="workspace-badge">PERSONAL WORKSPACE</span>
+      </header>
+      <div id="error" class="message error" role="alert" hidden></div>
+      <p id="status" class="status-message" role="status" aria-live="polite"></p>
+      <noscript><p class="message error">JavaScript is required to use the planner. Enable it and reload.</p></noscript>
+      <section class="composer" aria-labelledby="composer-heading">
+        <div class="section-heading"><h2 id="composer-heading">What's on your mind?</h2><span class="small-label" id="editor-mode">NEW TASK</span></div>
+        <form id="task-form">
+          <fieldset id="task-fields">
+            <legend class="sr-only">Task details</legend>
+            <label for="task-title">Task title</label>
+            <input id="task-title" name="title" placeholder="Something you'd like to get done..." required>
+            <label for="task-description">Notes <span class="optional">(optional)</span></label>
+            <textarea id="task-description" name="description" rows="2" placeholder="A little context, a next step, a helpful detail."></textarea>
+            <div class="composer-bottom">
+              <div class="field"><label for="task-due">Due date <span class="optional">(optional)</span></label><input id="task-due" name="dueDate" type="date" min="0001-01-01" max="9999-12-31"></div>
+              <div class="field"><label for="task-list">List</label><select id="task-list" name="listId"></select></div>
+              <div class="form-actions"><button id="cancel-edit" type="button" class="secondary" hidden>Cancel</button><button id="save-task" type="submit" class="primary">+ Add task</button></div>
+            </div>
+          </fieldset>
+        </form>
+      </section>
+      <section class="tasks-section" aria-labelledby="tasks-heading">
+        <div class="tasks-title"><h2 id="tasks-heading">All tasks</h2><span id="task-count" class="count-badge">0</span></div>
+        <div class="toolbar">
+          <div class="filters" role="group" aria-label="Due date filter">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="today" aria-pressed="false">Today</button>
+            <button type="button" data-filter="overdue" aria-pressed="false">Overdue</button>
+          </div>
+          <label class="completed-toggle"><input type="checkbox" id="show-completed"> Show completed</label>
+        </div>
+        <ul id="tasks" class="task-list"></ul>
+        <div id="empty" class="empty-state" hidden><span class="empty-icon" aria-hidden="true">&#10003;</span><h3>A little breathing room.</h3><p>No tasks in this view. Add something above, or try another filter.</p></div>
+      </section>
+      <footer class="main-footer"><span>ONE THING AT A TIME.</span><span>Back up your tasks before clearing browser data.</span></footer>
+    </main>
+  </div>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form method="dialog">
+      <h2 id="confirm-title">Please confirm</h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions"><button value="cancel" class="secondary" autofocus>Cancel</button><button id="confirm-accept" value="confirm" class="primary">Confirm</button></div>
+    </form>
+  </dialog>
+</body>
+</html>
