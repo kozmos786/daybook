@@ -7,6 +7,10 @@ const assets = new Map([
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/src/styles.css', ['src/styles.css', 'text/css; charset=utf-8']],
   ['/src/model.js', ['src/model.js', 'text/javascript; charset=utf-8']],
+  ['/src/dates.js', ['src/dates.js', 'text/javascript; charset=utf-8']],
+  ['/src/school.js', ['src/school.js', 'text/javascript; charset=utf-8']],
+  ['/src/schoolActions.js', ['src/schoolActions.js', 'text/javascript; charset=utf-8']],
+  ['/src/schoolUi.js', ['src/schoolUi.js', 'text/javascript; charset=utf-8']],
   ['/src/storage.js', ['src/storage.js', 'text/javascript; charset=utf-8']],
   ['/src/app.js', ['src/app.js', 'text/javascript; charset=utf-8']],
 ]);

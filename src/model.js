@@ -1,7 +1,12 @@
+import { isCalendarDate, localDate } from './dates.js';
+import { emptySchool, normalizeTargets, normalizeUnit, validateSchool } from './school.js';
+
+export { isCalendarDate, localDate };
+
 export const INBOX_ID = 'inbox';
 
 export function createWorkspace() {
-  return { version: 1, lists: [{ id: INBOX_ID, name: 'Inbox' }], tasks: [] };
+  return { version: 2, lists: [{ id: INBOX_ID, name: 'Inbox' }], tasks: [], school: emptySchool() };
 }
 
 function requireText(value, label) {
@@ -11,22 +16,18 @@ function requireText(value, label) {
   return value.trim();
 }
 
-export function isCalendarDate(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
-  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
-  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  return day <= [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
-}
-
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+// Accepts version 1 (no school data) and version 2, always returning version 2.
 export function validateWorkspace(value) {
-  if (!isRecord(value) || value.version !== 1 ||
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2) ||
       !Array.isArray(value.lists) || !Array.isArray(value.tasks)) {
-    throw new Error('Expected a version 1 task planner backup with lists and tasks.');
+    throw new Error('Expected a Daybook backup (version 1 or 2) with lists and tasks.');
+  }
+  if (value.version === 1 && value.school !== undefined) {
+    throw new Error('A version 1 backup cannot contain school data.');
   }
   const listIds = new Set();
   const listNames = new Set();
@@ -39,7 +40,16 @@ export function validateWorkspace(value) {
     }
     listIds.add(id);
     listNames.add(name.toLowerCase());
-    return { id, name };
+    const normalized = { id, name };
+    if (list.unit !== undefined) {
+      const unit = normalizeUnit(list.unit);
+      if (unit) normalized.unit = unit;
+    }
+    if (list.targets !== undefined) {
+      const targets = normalizeTargets(list.targets);
+      if (targets.length) normalized.targets = targets;
+    }
+    return normalized;
   });
   if (!lists.some((list) => list.id === INBOX_ID && list.name === 'Inbox')) {
     throw new Error('The permanent Inbox list is missing or renamed.');
@@ -63,7 +73,8 @@ export function validateWorkspace(value) {
       createdAt: task.createdAt, listId: task.listId, dueDate: task.dueDate,
     };
   });
-  return { version: 1, lists, tasks };
+  const school = validateSchool(value.version === 1 ? emptySchool() : value.school, lists);
+  return { version: 2, lists, tasks, school };
 }
 
 export function addTask(workspace, { title, description = '', dueDate = null, listId = INBOX_ID }) {
@@ -104,15 +115,16 @@ export function addList(workspace, name) {
 export function deleteList(workspace, id) {
   if (id === INBOX_ID) throw new Error('Inbox cannot be deleted.');
   if (!workspace.lists.some((list) => list.id === id)) throw new Error('List no longer exists.');
-  return {
+  return validateWorkspace({
     ...workspace,
     lists: workspace.lists.filter((list) => list.id !== id),
     tasks: workspace.tasks.map((task) => task.listId === id ? { ...task, listId: INBOX_ID } : task),
-  };
-}
-
-export function localDate(date = new Date()) {
-  return `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    school: {
+      ...workspace.school,
+      logs: workspace.school.logs.filter((log) => log.listId !== id),
+      daysOff: workspace.school.daysOff.filter((entry) => entry.listId !== id),
+    },
+  });
 }
 
 export function visibleTasks(workspace, { listId = '', filter = 'all', completed = false, today = localDate() } = {}) {

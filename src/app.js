@@ -3,6 +3,7 @@ import {
   visibleTasks, localDate, importText,
 } from './model.js';
 import { STORAGE_KEY, loadWorkspace, saveWorkspace, parseBackup, serializeWorkspace } from './storage.js';
+import { createSchoolUi } from './schoolUi.js';
 
 const byId = (id) => document.getElementById(id);
 let workspace = null;
@@ -72,6 +73,7 @@ function renderNavigation() {
       selectedList = list.id;
       renderNavigation();
       renderTasks();
+      school.render();
       nav.querySelector('[aria-current="page"]').focus();
     });
     nav.append(button);
@@ -188,6 +190,7 @@ function render() {
   if (!unavailable) {
     renderNavigation();
     renderTasks();
+    school.render();
   }
 }
 
@@ -230,7 +233,10 @@ byId('list-form').addEventListener('submit', (event) => {
 byId('delete-list').addEventListener('click', async () => {
   const id = selectedList;
   const list = workspace.lists.find((entry) => entry.id === id);
-  if (!await confirmAction('Delete list?', `Delete "${list.name}"? Its tasks will move to Inbox, not be deleted.`, 'Delete list')) return;
+  const hasSchoolData = workspace.school.logs.some((log) => log.listId === id)
+    || workspace.school.daysOff.some((entry) => entry.listId === id) || list.targets;
+  const extra = hasSchoolData ? ' Its school target, logged work, and saved days off will be erased.' : '';
+  if (!await confirmAction('Delete list?', `Delete "${list.name}"? Its tasks will move to Inbox, not be deleted.${extra}`, 'Delete list')) return;
   try {
     commit(deleteList(workspace, id));
     selectedList = INBOX_ID;
@@ -315,17 +321,24 @@ window.addEventListener('storage', (event) => {
     showError(new Error('Planner data changed in another tab. Reload this page before making more changes. Copy any unsaved edits first.'));
     workspace = null;
     if (byId('confirm-dialog').open) byId('confirm-dialog').close('cancel');
+    school.closeDay();
     render();
   }
 });
 function refreshDate() {
-  if (workspace && renderedDay !== localDate()) renderTasks();
+  if (workspace && renderedDay !== localDate()) { renderTasks(); school.render(); }
 }
 window.addEventListener('focus', refreshDate);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) refreshDate();
 });
 setInterval(() => { if (!document.hidden) refreshDate(); }, 60_000);
+
+const school = createSchoolUi({
+  getWorkspace: () => workspace,
+  getSelectedList: () => selectedList,
+  commit, confirmAction, showError, announce, refresh: render,
+});
 
 try {
   workspace = loadWorkspace(window.localStorage);

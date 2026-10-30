@@ -266,6 +266,68 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await waitFor(`document.querySelector('#task-fields').disabled === false`);
       assert.deepEqual(await taskNames(), ['Restored task']);
     });
+    await t.test('school: target, quick logging, calendar earning, spending, holiday refund', async () => {
+      await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 1, mobile: true });
+      await fill('#list-name', 'Math');
+      await click('#list-form button');
+      await waitFor(`document.querySelector('#subject-settings').hidden === false`);
+      await fill('#target-units', '2');
+      await fill('#target-unit', 'pages');
+      await click('#subject-settings button[type="submit"]');
+      await waitFor(`document.querySelector('#school-today .subject-row') !== null`);
+      const logged = () => evaluate(`document.querySelector('#school-today .subject-info span').textContent`);
+      const saved = () => evaluate(`document.querySelector('.subject-saved').textContent`);
+      if (/Day off|logged/.test(await logged()) === false) {
+        await click('[data-action="plus"]');
+        assert.match(await logged(), /1 of 2 pages/);
+        await click('[data-action="minus"]');
+        assert.match(await logged(), /0 of 2 pages/);
+        assert.equal(await evaluate(`document.querySelector('[data-action="minus"]').getAttribute('aria-disabled')`), 'true');
+      }
+      await click('#toggle-calendar');
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true, 'calendar fits 390px');
+      const pick = (expression) => evaluate(`(() => {
+        const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const d = new Date(); ${expression}; return iso(d);
+      })()`);
+      const saturday = await pick(`d.setDate(d.getDate() - 1); while (d.getDay() !== 6) d.setDate(d.getDate() - 1)`);
+      const openDay = async (date, back) => {
+        for (let i = 0; i < 4 && !(await evaluate(`document.querySelector('[data-date="${date}"]') !== null && document.querySelector('[data-date="${date}"]').closest('td') !== null && !document.querySelector('[data-date="${date}"]').classList.contains('outside')`)); i++) {
+          await click(back ? '[data-action="prev-month"]' : '[data-action="next-month"]');
+        }
+        await click(`.calendar-table [data-date="${date}"]`);
+        await waitFor(`document.querySelector('#day-dialog').open`);
+      };
+      const closeDay = () => evaluate(`new Promise(resolve => {
+        document.querySelector('#day-dialog').addEventListener('close', () => setTimeout(resolve, 0), { once: true });
+        document.querySelector('#close-day').click();
+      })`);
+      await openDay(saturday, true);
+      await fill(`#day-body input[type="number"]`, '2');
+      await click('[data-action="save-log"]');
+      await waitFor(`document.querySelector('#day-note').textContent === 'Work saved.'`);
+      assert.match(await saved(), /Saved days off: 2/);
+      await closeDay();
+      await click('[data-action="this-month"]');
+      const weekday = await pick(`d.setDate(d.getDate() + 1); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1)`);
+      await openDay(weekday, false);
+      await click('[data-action="spend"]');
+      await waitFor(`document.querySelector('#day-note').textContent === 'Day off used.'`);
+      assert.match(await saved(), /Saved days off: 1/);
+      await click('[data-action="toggle-holiday"]');
+      await waitFor(`document.querySelector('#day-note').textContent === 'Holiday added.'`);
+      assert.match(await saved(), /Saved days off: 2/);
+      await click('[data-action="toggle-holiday"]');
+      await waitFor(`document.querySelector('#day-note').textContent === 'Holiday removed.'`);
+      assert.match(await saved(), /Saved days off: 1/);
+      await closeDay();
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
+      const school = (await stored()).school;
+      assert.equal(school.logs.length, 1);
+      assert.equal(school.daysOff.length, 1);
+      assert.equal(school.holidays.length, 0);
+      await click('#list-navigation button:first-child');
+    });
     await t.test('mobile and desktop fit the viewport and controls can be used with a keyboard', async () => {
       for (const width of [390, 1280]) {
         await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 720 });

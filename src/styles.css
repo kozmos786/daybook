@@ -136,3 +136,29 @@ dialog p { font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: no-preference) {
   button { transition: background-color .12s ease; }
 }
+
+/* School */
+.school-section { margin-bottom: 24px; }
+.subject-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.subject-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.subject-saved, .school-note, .school-empty, .day-marks { color: var(--muted); font-size: 13px; }
+.subject-controls { display: flex; gap: 6px; }
+button[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+#calendar { margin-top: 14px; }
+.calendar-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.calendar-nav strong { flex: 1; text-align: center; min-width: 120px; }
+.calendar-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.calendar-table th { font-size: 11px; color: var(--muted); padding: 4px 0; }
+.calendar-table td { vertical-align: top; text-align: center; padding: 2px; border: 1px solid var(--border); height: 52px; overflow: hidden; }
+.calendar-table .day { width: 100%; min-height: 28px; padding: 2px; border: 0; background: transparent; font-size: 14px; }
+.calendar-table .day-weekend { color: var(--muted); }
+.calendar-table .day-holiday { background: #f5ead2; }
+.calendar-table .outside { opacity: .45; }
+.calendar-table .today { font-weight: 700; text-decoration: underline; }
+.day-marks { display: block; font-size: 10px; line-height: 1.2; overflow-wrap: anywhere; }
+.day-subject { border-top: 1px solid var(--border); padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+.day-subject h3 { font-size: 15px; }
+.deadline { color: #8a4b12; }
+#day-dialog { width: min(460px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow-y: auto; }
+#subject-settings { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+#subject-settings h3 { font-size: 14px; overflow-wrap: anywhere; }

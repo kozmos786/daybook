@@ -23,6 +23,14 @@
           <div class="inline"><input id="list-name" name="name" placeholder="e.g. Around the house" required><button type="submit" class="icon-button" aria-label="Create list">+</button></div>
         </form>
         <button type="button" id="delete-list" class="quiet danger" hidden>Delete selected list</button>
+        <form id="subject-settings" hidden>
+          <h3>Subject settings: <span id="subject-name"></span></h3>
+          <label for="target-units">Daily target (whole number, 0 = none)</label>
+          <input id="target-units" type="number" min="0" max="1000000" step="1" value="0">
+          <label for="target-unit">Unit <span class="optional">(e.g. pages)</span></label>
+          <input id="target-unit" maxlength="30">
+          <button type="submit" class="secondary full-width">Save subject settings</button>
+        </form>
       </section>
       <section class="data-tools" aria-labelledby="files-heading">
         <h2 id="files-heading">Your data, your space</h2>
@@ -59,6 +67,11 @@
           </fieldset>
         </form>
       </section>
+      <section class="school-section" aria-labelledby="school-heading">
+        <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>
+        <div id="school-today"></div>
+        <div id="calendar" hidden></div>
+      </section>
       <section class="tasks-section" aria-labelledby="tasks-heading">
         <div class="tasks-title"><h2 id="tasks-heading">All tasks</h2><span id="task-count" class="count-badge">0</span></div>
         <div class="toolbar">
@@ -75,6 +88,13 @@
       <footer class="main-footer"><span>ONE THING AT A TIME.</span><span>Back up your tasks before clearing browser data.</span></footer>
     </main>
   </div>
+  <dialog id="day-dialog" aria-labelledby="day-title">
+    <h2 id="day-title"></h2>
+    <div id="day-error" class="message error" role="alert" hidden></div>
+    <p id="day-note" role="status" aria-live="polite"></p>
+    <div id="day-body"></div>
+    <div class="dialog-actions"><button type="button" id="close-day" class="primary">Close</button></div>
+  </dialog>
   <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
     <form method="dialog">
       <h2 id="confirm-title">Please confirm</h2>

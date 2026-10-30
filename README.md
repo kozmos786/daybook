@@ -61,6 +61,24 @@ Failed writes display an error and do not replace the last saved workspace. Unsa
 
 If another tab changes the workspace, this tab blocks further edits and asks you to reload, avoiding ordinary stale-tab overwrites. Prefer a single editing tab.
 
+## Student features
+
+Turn any list into a school subject: select it, then use **Subject settings** to set a whole-number daily target and a unit (for example 2 pages). Assignments are ordinary tasks in that list with a due date.
+
+- **School days** are Monday–Friday. Mark any date as a **holiday** from the Calendar (a day off for every subject).
+- **School today** shows each subject's target, work logged, what remains, and saved days off. Use **+** / **−** to log whole units for today. The **Calendar** lets you log work for past days, mark holidays, and use days off.
+- **Earning (per subject):** work above the daily target is extra. Each time accumulated extra reaches one full daily target you earn one day off; partial extra carries over. On a weekend or holiday, every unit counts double. Short days never remove saved days. Saved days never expire.
+  - Target 2: 4 pages in a day earns 1; 3 pages on two days earns 1; 3 pages once earns 0 (1 carried); 2 pages on a Saturday earns 2.
+- **Using a day off:** pick a school day (today or later) in the Calendar. It applies to that subject only. If a task in that subject is due that day you get a warning you can override. A day off can be cancelled until the day has passed.
+- Marking a holiday on a date where you used a day off returns it; removing the holiday uses it again.
+- **Changing a target** applies from today forward; days already earned are unchanged.
+- Edits that would leave more days used than earned (lowering a log, a target, or removing a holiday) are blocked with a message.
+- Assumption: work logged on a day off you used counts as a normal school day (only work above the target earns), so you cannot earn the day back.
+- Deleting a subject keeps its tasks in Inbox and erases its school data after confirmation.
+- Backups now use version 2. Older version 1 backups and saved data upgrade automatically.
+
+Not included: grades, reminders, calendar-file import, multiple students, recurring assignments, sharing.
+
 ## Checks
 
 With Node.js on PATH:
