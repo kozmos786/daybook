@@ -12,6 +12,8 @@ const assets = new Map([
   ['/src/schoolActions.js', ['src/schoolActions.js', 'text/javascript; charset=utf-8']],
   ['/src/schoolUi.js', ['src/schoolUi.js', 'text/javascript; charset=utf-8']],
   ['/src/guide.js', ['src/guide.js', 'text/javascript; charset=utf-8']],
+  ['/src/games.js', ['src/games.js', 'text/javascript; charset=utf-8']],
+  ['/src/gamesLogic.js', ['src/gamesLogic.js', 'text/javascript; charset=utf-8']],
   ['/src/storage.js', ['src/storage.js', 'text/javascript; charset=utf-8']],
   ['/src/app.js', ['src/app.js', 'text/javascript; charset=utf-8']],
 ]);

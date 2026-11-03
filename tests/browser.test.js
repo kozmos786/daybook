@@ -354,6 +354,20 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await waitFor(`document.querySelector('#status').textContent === 'Assignment completed.'`);
       assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
     });
+    await t.test('board games tab opens games, plays tic-tac-toe, and returns to the planner', async () => {
+      assert.equal(await evaluate(`document.querySelector('#games').hidden`), true);
+      await click('#tab-games');
+      assert.equal(await evaluate(`document.querySelector('.app').hidden`), true);
+      await evaluate(`document.querySelector('.ttt-cell').click()`);
+      await waitFor(`document.querySelectorAll('.ttt-cell')[0].textContent === 'X' && [...document.querySelectorAll('.ttt-cell')].some(c => c.textContent === 'O')`);
+      for (const id of ['chess', 'c4', 'memory', 'snake', 'paint']) {
+        await evaluate(`document.querySelector('[data-game="${id}"]').click()`);
+        assert.equal(await evaluate(`document.querySelector('#game-stage').children.length > 0`), true, id);
+      }
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
+      await click('#tab-planner');
+      assert.equal(await evaluate(`document.querySelector('.app').hidden`), false);
+    });
     await t.test('mobile and desktop fit the viewport and controls can be used with a keyboard', async () => {
       for (const width of [390, 1280]) {
         await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 720 });

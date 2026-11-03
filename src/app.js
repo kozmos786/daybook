@@ -4,6 +4,7 @@ import {
 } from './model.js';
 import { STORAGE_KEY, loadWorkspace, saveWorkspace, parseBackup, serializeWorkspace } from './storage.js';
 import { createSchoolUi } from './schoolUi.js';
+import { initGames } from './games.js';
 
 const byId = (id) => document.getElementById(id);
 let workspace = null;
@@ -339,6 +340,8 @@ const school = createSchoolUi({
   getSelectedList: () => selectedList,
   commit, confirmAction, showError, announce, refresh: render,
 });
+
+initGames();
 
 try {
   workspace = loadWorkspace(window.localStorage);

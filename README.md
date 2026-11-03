@@ -104,3 +104,8 @@ Tests cover task/list operations, local dates, filtering, backup validation, per
 ## Scope
 
 Responsive phone/desktop layout and keyboard-accessible controls. Local-only server bound to `127.0.0.1`. No accounts, sync, collaboration, recurrence, reminders, AI, analytics, integrations, hosting, installable app, or guaranteed offline access.
+
+## Board games
+
+The **Board games** tab (top left) opens a small play area: tic-tac-toe (vs the computer or a friend), chess (two players, with castling, en passant and check/checkmate), Connect Four, Memory match, Snake, and a Paint board (colours, brush size, eraser, save as PNG). Nothing is stored or sent anywhere.
+

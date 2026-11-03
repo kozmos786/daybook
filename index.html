@@ -11,6 +11,16 @@
 </head>
 <body>
   <a class="skip-link" href="#task-title">Skip to new task</a>
+  <nav class="top-tabs" aria-label="Sections">
+    <button type="button" id="tab-planner" aria-pressed="true">&#128203; Planner</button>
+    <button type="button" id="tab-games" aria-pressed="false">&#127922; Board games</button>
+  </nav>
+  <section id="games" class="games" aria-labelledby="games-heading" hidden>
+    <h1 id="games-heading">Board games <span>&#127922;</span></h1>
+    <p class="subtitle">Take a little break. Pick a game.</p>
+    <div id="game-picker" class="game-picker" role="group" aria-label="Choose a game"></div>
+    <div id="game-stage" class="game-stage"></div>
+  </section>
   <div class="app">
     <aside class="sidebar" aria-label="Workspace">
       <a class="brand" href="./" aria-label="Daybook home"><span class="brand-mark" aria-hidden="true">D</span>daybook<span class="brand-dot">.</span></a>
