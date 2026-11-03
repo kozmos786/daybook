@@ -1,7 +1,8 @@
-import { INBOX_ID, addList, addTask, localDate, updateTask } from './model.js';
+import { INBOX_ID, localDate, updateTask } from './model.js';
 import { addDays } from './dates.js';
 import { addWork, cancelDayOff, markHoliday, setSubjectTarget, setWorkLogged, spendDayOff, unmarkHoliday } from './schoolActions.js';
 import { dayDetails, dayKind, isSubject, monthGrid, targetOn, todaySummary } from './school.js';
+import { guideStarted, moveTask, nextMonday, startSchoolYear, subjectStyle, swapDueDates } from './guide.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
   'September', 'October', 'November', 'December'];
@@ -42,6 +43,8 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
   let calendarOpen = false;
   let view = null;
   let openDate = null;
+  let showAll = false;
+  const openPlans = new Set();
 
   function run(change, message) {
     try {
@@ -57,7 +60,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     const note = { weekend: 'Weekend: work you log counts double.', holiday: 'Holiday: work you log counts double.' }[summary.kind];
     rebuild(container, () => {
       if (summary.subjects.length === 0) {
-        container.append(el('p', 'school-empty', 'No subjects yet. Choose a list and set a daily target in Subject settings.'));
+        container.append(el('p', 'school-empty', 'No subjects yet. Press "Start the school year" above to set everything up.'));
         return;
       }
       if (note) container.append(el('p', 'school-note', note));
@@ -65,7 +68,13 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
         const id = subject.list.id;
         const row = el('div', 'subject-row');
         const info = el('div', 'subject-info');
-        info.append(el('strong', '', subject.list.name));
+        const style = subjectStyle(subject.list.name);
+        row.style.setProperty('--accent', style.color);
+        const heading = el('div', 'subject-heading');
+        const emoji = el('span', 'emoji', style.emoji);
+        emoji.setAttribute('aria-hidden', 'true');
+        heading.append(emoji, el('strong', '', subject.list.name));
+        info.append(heading);
         const status = subject.dayOff
           ? 'Day off today'
           : summary.kind === 'school'
@@ -102,23 +111,8 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
           label.htmlFor = date.id;
           off.append(label, date, button('Use a day off', 'quick-off', { list: id }, 'secondary'));
           row.append(off);
-        }
-        const form = el('form', 'assignment-form');
-        form.dataset.list = id;
-        const title = el('input');
-        title.name = 'title';
-        title.required = true;
-        title.placeholder = 'Add an assignment';
-        title.setAttribute('aria-label', `New assignment for ${subject.list.name}`);
-        const due = el('input');
-        due.name = 'due';
-        due.type = 'date';
-        due.setAttribute('aria-label', `Due date for ${subject.list.name} assignment`);
-        const add = el('button', 'secondary', 'Add');
-        add.type = 'submit';
-        form.append(title, due, add);
-        row.append(form);
-        container.append(row);
+          }
+          container.append(row);
       }
     });
   }
@@ -132,23 +126,61 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     const container = byId('upcoming');
     rebuild(container, () => {
       if (tasks.length === 0) {
-        container.append(el('p', 'school-empty', 'Nothing due. Add an assignment to a subject above.'));
+        container.append(el('p', 'school-empty', 'Nothing due. Start the school year above or add an assignment to a subject.'));
         return;
       }
-      for (const task of tasks) {
+      for (const task of showAll ? tasks : tasks.slice(0, 8)) {
         const urgency = !task.dueDate ? '' : task.dueDate < today ? 'overdue'
           : task.dueDate === today ? 'due-today' : task.dueDate <= soon ? 'due-soon' : '';
-        const item = el('label', `upcoming-item ${urgency}`);
+        const item = el('div', `upcoming-item ${urgency}`);
+        item.style.setProperty('--accent', subjectStyle(subjects.get(task.listId)).color);
+        const top = el('label', 'upcoming-title');
         const box = el('input');
         box.type = 'checkbox';
         box.dataset.task = task.id;
         box.dataset.action = 'complete';
         box.dataset.list = task.id;
         const when = task.dueDate ? `${urgency === 'overdue' ? 'Overdue: ' : 'Due '}${task.dueDate}` : 'No due date';
-        item.append(box, el('span', '', `${task.title} \u00B7 ${subjects.get(task.listId)} \u00B7 ${when}`));
+        top.append(box, el('span', '', `${task.title} \u00B7 ${when}`));
+        const plan = el('details', 'change-plan');
+        plan.append(el('summary', '', 'Change plan'));
+        const move = el('div', 'plan-row');
+        const date = el('input');
+        date.type = 'date';
+        date.id = `move-date-${task.id}`;
+        date.value = task.dueDate ?? '';
+        date.setAttribute('aria-label', `New due date for ${task.title}`);
+        move.append(date, button('Move', 'move', { list: task.id }, 'secondary'));
+        const swap = el('div', 'plan-row');
+        const choice = el('select');
+        choice.id = `swap-with-${task.id}`;
+        choice.setAttribute('aria-label', `Swap due date of ${task.title} with`);
+        for (const other of tasks) {
+          if (other.id === task.id) continue;
+          const option = el('option', '', `${other.title} (${other.dueDate ?? 'no date'})`);
+          option.value = other.id;
+          choice.append(option);
+        }
+        swap.append(choice, button('Swap dates', 'swap', { list: task.id }, 'secondary'));
+        plan.append(move, swap);
+        if (openPlans.has(task.id)) plan.open = true;
+        plan.addEventListener('toggle', () => { if (plan.open) openPlans.add(task.id); else openPlans.delete(task.id); });
+        item.append(top, plan);
         container.append(item);
       }
+      if (tasks.length > 8) {
+        container.append(button(showAll ? 'Show fewer' : `Show all ${tasks.length}`, 'toggle-all', {}, 'secondary'));
+      }
     });
+  }
+
+  function renderGuide(workspace) {
+    const container = byId('guide');
+    const started = guideStarted(workspace);
+    container.hidden = started;
+    if (started || container.dataset.ready) return;
+    container.dataset.ready = '1';
+    byId('year-start').value = nextMonday(localDate());
   }
 
   function nextOffDate(workspace, listId, today) {
@@ -298,7 +330,12 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
       const remaining = todaySummary(getWorkspace(), today).subjects.find((s) => s.list.id === list)?.remaining ?? 0;
       if (remaining > 0) run((ws) => addWork(ws, list, today, remaining), 'Target finished for today.');
     } else if (action === 'quick-off') spend(list, byId(`off-date-${list}`).value, run);
-    else if (action === 'minus') {
+    else if (action === 'move') run((ws) => moveTask(ws, list, byId(`move-date-${list}`).value), 'Due date changed.');
+    else if (action === 'swap') run((ws) => swapDueDates(ws, list, byId(`swap-with-${list}`).value), 'Due dates swapped.');
+    else if (action === 'toggle-all') {
+      showAll = !showAll;
+      renderUpcoming(getWorkspace());
+    } else if (action === 'minus') {
       if (target.getAttribute('aria-disabled') === 'true') return;
       run((ws) => addWork(ws, list, today, -1), 'Work removed.');
     } else if (action === 'prev-month' || action === 'next-month') {
@@ -328,29 +365,14 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
   }
 
   byId('school-today').addEventListener('click', onClick);
-  byId('school-today').addEventListener('submit', (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const title = form.elements.title.value;
-    run((ws) => addTask(ws, { title, listId: form.dataset.list, dueDate: form.elements.due.value || null }),
-      'Assignment added.');
-  });
   byId('upcoming').addEventListener('change', (event) => {
     const box = event.target;
     if (box.dataset.action !== 'complete') return;
     run((ws) => updateTask(ws, box.dataset.task, { completed: true }), 'Assignment completed.');
   });
-  byId('subject-form').addEventListener('submit', (event) => {
-    event.preventDefault();
-    const raw = byId('new-subject-target').value.trim();
-    run((ws) => {
-      const added = addList(ws, byId('new-subject-name').value);
-      return setSubjectTarget(added, added.lists.at(-1).id, {
-        units: raw === '' ? Number.NaN : Number(raw),
-        unit: byId('new-subject-unit').value,
-      });
-    }, 'Subject added.');
-    if (byId('error').hidden) byId('subject-form').reset();
+  byId('upcoming').addEventListener('click', onClick);
+  byId('start-year').addEventListener('click', () => {
+    run((ws) => startSchoolYear(ws, byId('year-start').value, localDate()), 'School year ready! \u2728');
   });
   byId('calendar').addEventListener('click', onClick);
   byId('day-body').addEventListener('click', onClick);
@@ -375,6 +397,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
       if (!workspace) return;
       renderSettings(workspace);
       renderToday(workspace);
+      renderGuide(workspace);
       renderUpcoming(workspace);
       renderCalendar(workspace);
       renderDay(workspace);

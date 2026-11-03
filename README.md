@@ -63,10 +63,11 @@ If another tab changes the workspace, this tab blocks further edits and asks you
 
 ## Student features
 
-Turn any list into a school subject: add one with **Add a subject** (name, daily target, unit such as pages), or select an existing list and use **Subject settings**. The **School today** dashboard sits at the top of the page.
+Subjects and assignments come from a **preset school-year guide** (middle school): press **Start the school year**, pick the first Monday, and Daybook adds Math, English, Science, History and Spelling with daily targets and a weekly review due every Friday for 36 weeks. Existing subjects with the same names are kept. The look is soft and pastel, with an emoji per subject.
 
-- Each subject card shows a progress bar, big **+1** and **Done for today** buttons, saved days off, a **Use a day off** button (defaulting to the next school day, with a date picker), and a quick form to add assignments with due dates.
-- **Upcoming assignments** lists incomplete subject tasks by due date (red overdue, orange today, yellow within 3 days); tick one to complete it.
+- **Change plan:** every upcoming assignment has a *Change plan* section to move its due date or swap due dates with another assignment.
+- Each subject card shows a progress bar, big **+1** and **Done for today** buttons, saved days off, and a **Use a day off** button (defaulting to the next school day, with a date picker).
+- **Upcoming assignments** are sorted by due date (red overdue, orange today, yellow within 3 days); tick one to complete it.
 - The **Calendar** is an overview of holidays, days off and due dates; click a day to mark a holiday or log work for a past day.
 
 - **School days** are Monday–Friday. Mark any date as a **holiday** from the Calendar (a day off for every subject).

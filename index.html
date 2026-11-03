@@ -53,16 +53,16 @@
       <section class="school-section" aria-labelledby="school-heading">
         <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>
         <p class="rule">Do your daily target. Every full target of extra work earns 1 day off (double on weekends and holidays).</p>
-        <div id="school-today"></div>
-        <form id="subject-form" class="subject-form">
-          <h3>Add a subject</h3>
+        <div id="guide" class="guide" hidden>
+          <h3>&#127752; Your school year guide</h3>
+          <p>One tap sets up Math, English, Science, History and Spelling with daily targets and a weekly review due every Friday for 36 weeks. You can move or swap any date afterwards.</p>
           <div class="inline">
-            <input id="new-subject-name" aria-label="Subject name" placeholder="Subject (e.g. Math)" required>
-            <input id="new-subject-target" aria-label="Daily target" type="number" min="1" max="1000000" step="1" value="1" required>
-            <input id="new-subject-unit" aria-label="Unit" placeholder="pages" maxlength="30">
-            <button type="submit" class="secondary">Add subject</button>
+            <label for="year-start">First Monday</label>
+            <input id="year-start" type="date" min="0001-01-01" max="9999-12-31">
+            <button type="button" id="start-year" class="big-button">Start the school year</button>
           </div>
-        </form>
+        </div>
+        <div id="school-today"></div>
         <h3 class="upcoming-heading">Upcoming assignments</h3>
         <div id="upcoming"></div>
         <div id="calendar" hidden></div>
