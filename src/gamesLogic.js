@@ -193,6 +193,58 @@ export function chessStatus(state) {
   return check ? 'check' : 'play';
 }
 
+export function chessAllMoves(state) {
+  const moves = [];
+  for (let r = 0; r < 8; r += 1) {
+    for (let c = 0; c < 8; c += 1) for (const to of chessMoves(state, r, c)) moves.push({ from: [r, c], to });
+  }
+  return moves;
+}
+
+const VALUE = { P: 100, N: 320, B: 330, R: 500, Q: 900, K: 0 };
+
+function evaluate(state) {
+  let score = 0;
+  for (let r = 0; r < 8; r += 1) {
+    for (let c = 0; c < 8; c += 1) {
+      const p = state.board[r][c];
+      if (!p) continue;
+      const centre = 3.5 - Math.max(Math.abs(r - 3.5), Math.abs(c - 3.5));
+      const advance = p[1] === 'P' ? (p[0] === 'w' ? 6 - r : r - 1) * 6 : 0;
+      const value = VALUE[p[1]] + (p[1] === 'K' ? 0 : centre * 4) + advance;
+      score += p[0] === state.turn ? value : -value;
+    }
+  }
+  return score;
+}
+
+function search(state, depth, alpha, beta, ply) {
+  const moves = chessAllMoves(state);
+  if (!moves.length) return chessInCheck(state, state.turn) ? -100000 + ply : 0;
+  if (depth === 0) return evaluate(state);
+  moves.sort((a, b) => (state.board[b.to[0]][b.to[1]] ? 1 : 0) - (state.board[a.to[0]][a.to[1]] ? 1 : 0));
+  let best = -Infinity;
+  for (const move of moves) {
+    const score = -search(apply(state, move.from, move.to), depth - 1, -beta, -alpha, ply + 1);
+    if (score > best) best = score;
+    if (best > alpha) alpha = best;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+export function chessBestMove(state, depth = 2, rng = Math.random) {
+  const moves = chessAllMoves(state);
+  if (!moves.length) return null;
+  let best = [];
+  let bestScore = -Infinity;
+  for (const move of moves) {
+    const score = -search(apply(state, move.from, move.to), depth - 1, -Infinity, Infinity, 1) + rng() * 2;
+    if (score > bestScore + 1e-9) { bestScore = score; best = [move]; } else if (Math.abs(score - bestScore) <= 1e-9) best.push(move);
+  }
+  return best[Math.floor(rng() * best.length)];
+}
+
 export function snakeStart(size = 15, rng = Math.random) {
   const mid = Math.floor(size / 2);
   const state = { size, snake: [{ x: mid, y: mid }, { x: mid - 1, y: mid }, { x: mid - 2, y: mid }], dir: { x: 1, y: 0 }, food: null, score: 0, over: false };

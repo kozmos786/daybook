@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  c4Drop, c4Winner, chessMove, chessMoves, chessStart, chessStatus, snakeStart, snakeStep, snakeTurn, tttBestMove, tttWinner,
+  c4Drop, c4Winner, chessBestMove, chessMove, chessMoves, chessStart, chessStatus, snakeStart, snakeStep, snakeTurn, tttBestMove, tttWinner,
 } from '../src/gamesLogic.js';
 
 function perft(state, depth) {
@@ -33,6 +33,17 @@ test('chess detects fool\'s mate, rejects illegal moves, and supports castling',
   c = chessMove(c, [7, 4], [7, 6]);
   assert.equal(c.board[7][5], 'wR');
   assert.equal(c.board[7][6], 'wK');
+});
+
+test('chess bot finds mate in one and plays legal moves at every level', () => {
+  let s = chessStart();
+  for (const [from, to] of [[[6, 5], [5, 5]], [[1, 4], [3, 4]], [[6, 6], [4, 6]]]) s = chessMove(s, from, to);
+  const mate = chessBestMove(s, 2);
+  assert.deepEqual([mate.from, mate.to], [[0, 3], [4, 7]]);
+  for (const depth of [1, 2, 3]) {
+    const move = chessBestMove(chessStart(), depth);
+    assert.ok(chessMove(chessStart(), move.from, move.to));
+  }
 });
 
 test('tic-tac-toe computer never loses and takes a win', () => {

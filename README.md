@@ -107,5 +107,5 @@ Responsive phone/desktop layout and keyboard-accessible controls. Local-only ser
 
 ## Board games
 
-The **Board games** tab (top left) opens a small play area: tic-tac-toe (vs the computer or a friend), chess (two players, with castling, en passant and check/checkmate), Connect Four, Memory match, Snake, and a Paint board (colours, brush size, eraser, save as PNG). Nothing is stored or sent anywhere.
+The **Board games** tab (top left) opens a small play area: tic-tac-toe (vs the computer or a friend), chess (against a computer bot with Easy/Medium/Hard levels, or two players on one screen; castling, en passant and checkmate work), Connect Four, Memory match, Snake, and a Paint board (colours, brush size, eraser, save as PNG). Nothing is stored or sent anywhere.
 

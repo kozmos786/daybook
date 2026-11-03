@@ -1,5 +1,5 @@
 import {
-  C4_COLS, C4_ROWS, c4Drop, c4Winner, chessInCheck, chessMove, chessMoves, chessStart, chessStatus,
+  C4_COLS, C4_ROWS, c4Drop, c4Winner, chessBestMove, chessInCheck, chessMove, chessMoves, chessStart, chessStatus,
   shuffled, snakeStart, snakeStep, snakeTurn, tttBestMove, tttWinner,
 } from './gamesLogic.js';
 
@@ -107,6 +107,15 @@ function chess(stage) {
   let state;
   let selected = null;
   let targets = [];
+  let timer = null;
+  const mode = el('label', { class: 'check' });
+  const box = el('input', { type: 'checkbox', checked: true });
+  mode.append(box, ' Play against the computer (you are white)');
+  const level = el('select', {});
+  level.setAttribute('aria-label', 'Computer level');
+  for (const [value, label] of [['1', 'Easy'], ['2', 'Medium'], ['3', 'Hard']]) level.append(el('option', { value }, label));
+  level.value = '2';
+  stage.append(mode, level);
   const say = status(stage);
   const grid = el('div', { class: 'chess-grid', role: 'group' });
   grid.setAttribute('aria-label', 'Chess board');
@@ -137,13 +146,26 @@ function chess(stage) {
     else if (result === 'stalemate') say('Stalemate. It is a draw.');
     else say(`${color(state.turn)} to move${chessInCheck(state, state.turn) ? ' - check!' : ''}`);
   }
+  function botTurn() {
+    if (!box.checked || state.turn !== 'b' || ['checkmate', 'stalemate'].includes(chessStatus(state))) return;
+    say('Computer is thinking...');
+    timer = setTimeout(() => {
+      timer = null;
+      const move = chessBestMove(state, Number(level.value));
+      if (move) state = chessMove(state, move.from, move.to);
+      draw();
+    }, 50);
+  }
   function click(r, c) {
     const result = chessStatus(state);
-    if (result === 'checkmate' || result === 'stalemate') return;
+    if (result === 'checkmate' || result === 'stalemate' || timer || (box.checked && state.turn === 'b')) return;
     if (selected && targets.some(([tr, tc]) => tr === r && tc === c)) {
       state = chessMove(state, selected, [r, c]);
       selected = null;
       targets = [];
+      draw();
+      botTurn();
+      return;
     } else if (state.board[r][c]?.[0] === state.turn) {
       selected = [r, c];
       targets = chessMoves(state, r, c);
@@ -153,10 +175,12 @@ function chess(stage) {
     }
     draw();
   }
-  function reset() { state = chessStart(); selected = null; targets = []; draw(); }
-  stage.append(el('p', { class: 'hint' }, 'Two players share the board, white moves first. Click a piece, then a highlighted square. Castling and en passant work; pawns promote to a queen.'));
+  function reset() { clearTimeout(timer); timer = null; state = chessStart(); selected = null; targets = []; draw(); }
+  box.addEventListener('change', reset);
+  stage.append(el('p', { class: 'hint' }, 'You play white and move first. Click a piece, then a highlighted square. Castling and en passant work; pawns promote to a queen. Untick the box to play a friend on the same screen.'));
   newGameButton(stage, reset);
   reset();
+  return () => clearTimeout(timer);
 }
 
 function memory(stage) {
