@@ -50,6 +50,23 @@
       <div id="error" class="message error" role="alert" hidden></div>
       <p id="status" class="status-message" role="status" aria-live="polite"></p>
       <noscript><p class="message error">JavaScript is required to use the planner. Enable it and reload.</p></noscript>
+      <section class="school-section" aria-labelledby="school-heading">
+        <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>
+        <p class="rule">Do your daily target. Every full target of extra work earns 1 day off (double on weekends and holidays).</p>
+        <div id="school-today"></div>
+        <form id="subject-form" class="subject-form">
+          <h3>Add a subject</h3>
+          <div class="inline">
+            <input id="new-subject-name" aria-label="Subject name" placeholder="Subject (e.g. Math)" required>
+            <input id="new-subject-target" aria-label="Daily target" type="number" min="1" max="1000000" step="1" value="1" required>
+            <input id="new-subject-unit" aria-label="Unit" placeholder="pages" maxlength="30">
+            <button type="submit" class="secondary">Add subject</button>
+          </div>
+        </form>
+        <h3 class="upcoming-heading">Upcoming assignments</h3>
+        <div id="upcoming"></div>
+        <div id="calendar" hidden></div>
+      </section>
       <section class="composer" aria-labelledby="composer-heading">
         <div class="section-heading"><h2 id="composer-heading">What's on your mind?</h2><span class="small-label" id="editor-mode">NEW TASK</span></div>
         <form id="task-form">
@@ -66,11 +83,6 @@
             </div>
           </fieldset>
         </form>
-      </section>
-      <section class="school-section" aria-labelledby="school-heading">
-        <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>
-        <div id="school-today"></div>
-        <div id="calendar" hidden></div>
       </section>
       <section class="tasks-section" aria-labelledby="tasks-heading">
         <div class="tasks-title"><h2 id="tasks-heading">All tasks</h2><span id="task-count" class="count-badge">0</span></div>

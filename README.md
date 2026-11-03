@@ -63,7 +63,11 @@ If another tab changes the workspace, this tab blocks further edits and asks you
 
 ## Student features
 
-Turn any list into a school subject: select it, then use **Subject settings** to set a whole-number daily target and a unit (for example 2 pages). Assignments are ordinary tasks in that list with a due date.
+Turn any list into a school subject: add one with **Add a subject** (name, daily target, unit such as pages), or select an existing list and use **Subject settings**. The **School today** dashboard sits at the top of the page.
+
+- Each subject card shows a progress bar, big **+1** and **Done for today** buttons, saved days off, a **Use a day off** button (defaulting to the next school day, with a date picker), and a quick form to add assignments with due dates.
+- **Upcoming assignments** lists incomplete subject tasks by due date (red overdue, orange today, yellow within 3 days); tick one to complete it.
+- The **Calendar** is an overview of holidays, days off and due dates; click a day to mark a holiday or log work for a past day.
 
 - **School days** are Monday–Friday. Mark any date as a **holiday** from the Calendar (a day off for every subject).
 - **School today** shows each subject's target, work logged, what remains, and saved days off. Use **+** / **−** to log whole units for today. The **Calendar** lets you log work for past days, mark holidays, and use days off.

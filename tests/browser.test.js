@@ -328,6 +328,21 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       assert.equal(school.holidays.length, 0);
       await click('#list-navigation button:first-child');
     });
+    await t.test('school dashboard: add subject, finish target, add assignment, use day off', async () => {
+      await fill('#new-subject-name', 'Science');
+      await fill('#new-subject-target', '3');
+      await fill('#new-subject-unit', 'problems');
+      await click('#subject-form button[type="submit"]');
+      await waitFor(`[...document.querySelectorAll('.subject-row strong')].some(n => n.textContent === 'Science')`);
+      const card = `[...document.querySelectorAll('.subject-row')].find(r => r.querySelector('strong').textContent === 'Science')`;
+      await evaluate(`${card}.querySelector('[data-action="done"]').click()`);
+      await waitFor(`${card}.querySelector('.subject-info span').textContent.includes('3 of 3 problems')`);
+      await evaluate(`(() => { const f = ${card}.querySelector('.assignment-form'); f.elements.title.value = 'Lab report'; f.elements.due.value = '2030-01-15'; f.requestSubmit(); })()`);
+      await waitFor(`document.querySelector('#upcoming').textContent.includes('Lab report')`);
+      await evaluate(`document.querySelector('#upcoming input[type="checkbox"]').click()`);
+      await waitFor(`!document.querySelector('#upcoming').textContent.includes('Lab report')`);
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
+    });
     await t.test('mobile and desktop fit the viewport and controls can be used with a keyboard', async () => {
       for (const width of [390, 1280]) {
         await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 720 });

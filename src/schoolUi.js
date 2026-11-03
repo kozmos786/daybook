@@ -1,6 +1,7 @@
-import { INBOX_ID, localDate } from './model.js';
+import { INBOX_ID, addList, addTask, localDate, updateTask } from './model.js';
+import { addDays } from './dates.js';
 import { addWork, cancelDayOff, markHoliday, setSubjectTarget, setWorkLogged, spendDayOff, unmarkHoliday } from './schoolActions.js';
-import { dayDetails, monthGrid, targetOn, todaySummary } from './school.js';
+import { dayDetails, dayKind, isSubject, monthGrid, targetOn, todaySummary } from './school.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
   'September', 'October', 'November', 'December'];
@@ -61,6 +62,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
       }
       if (note) container.append(el('p', 'school-note', note));
       for (const subject of summary.subjects) {
+        const id = subject.list.id;
         const row = el('div', 'subject-row');
         const info = el('div', 'subject-info');
         info.append(el('strong', '', subject.list.name));
@@ -70,19 +72,91 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
             ? `${subject.logged} of ${subject.target} ${subject.unit} done, ${subject.remaining} to go`
             : `${subject.logged} ${subject.unit} logged`;
         info.append(el('span', '', status));
+        const bar = el('progress');
+        bar.max = subject.target;
+        bar.value = Math.min(subject.logged, subject.target);
+        bar.setAttribute('aria-label', `${subject.list.name} progress today`);
+        info.append(bar);
         info.append(el('span', 'subject-saved',
           `Saved days off: ${subject.balance} (${subject.carry} extra carried)`));
         const controls = el('div', 'subject-controls');
-        const minus = button('\u2212', 'minus', { list: subject.list.id }, 'icon-button');
+        const minus = button('\u2212', 'minus', { list: id }, 'icon-button');
         minus.setAttribute('aria-label', `Remove one ${subject.unit} from ${subject.list.name}`);
         if (subject.logged === 0) minus.setAttribute('aria-disabled', 'true');
-        const plus = button('+', 'plus', { list: subject.list.id }, 'icon-button');
+        const plus = button('+1', 'plus', { list: id }, 'big-button');
         plus.setAttribute('aria-label', `Add one ${subject.unit} to ${subject.list.name}`);
         controls.append(minus, plus);
+        if (subject.remaining > 0) {
+          const done = button('Done for today', 'done', { list: id }, 'secondary');
+          done.setAttribute('aria-label', `Finish today's ${subject.list.name} target`);
+          controls.append(done);
+        }
         row.append(info, controls);
+        if (subject.balance > 0) {
+          const off = el('div', 'quick-off');
+          const date = el('input');
+          date.type = 'date';
+          date.id = `off-date-${id}`;
+          date.value = nextOffDate(workspace, id, localDate());
+          const label = el('label', '', 'Day off on');
+          label.htmlFor = date.id;
+          off.append(label, date, button('Use a day off', 'quick-off', { list: id }, 'secondary'));
+          row.append(off);
+        }
+        const form = el('form', 'assignment-form');
+        form.dataset.list = id;
+        const title = el('input');
+        title.name = 'title';
+        title.required = true;
+        title.placeholder = 'Add an assignment';
+        title.setAttribute('aria-label', `New assignment for ${subject.list.name}`);
+        const due = el('input');
+        due.name = 'due';
+        due.type = 'date';
+        due.setAttribute('aria-label', `Due date for ${subject.list.name} assignment`);
+        const add = el('button', 'secondary', 'Add');
+        add.type = 'submit';
+        form.append(title, due, add);
+        row.append(form);
         container.append(row);
       }
     });
+  }
+
+  function renderUpcoming(workspace) {
+    const today = localDate();
+    const soon = addDays(today, 3);
+    const subjects = new Map(workspace.lists.filter(isSubject).map((list) => [list.id, list.name]));
+    const tasks = workspace.tasks.filter((task) => !task.completed && subjects.has(task.listId))
+      .sort((a, b) => (a.dueDate ?? '9999-99-99').localeCompare(b.dueDate ?? '9999-99-99'));
+    const container = byId('upcoming');
+    rebuild(container, () => {
+      if (tasks.length === 0) {
+        container.append(el('p', 'school-empty', 'Nothing due. Add an assignment to a subject above.'));
+        return;
+      }
+      for (const task of tasks) {
+        const urgency = !task.dueDate ? '' : task.dueDate < today ? 'overdue'
+          : task.dueDate === today ? 'due-today' : task.dueDate <= soon ? 'due-soon' : '';
+        const item = el('label', `upcoming-item ${urgency}`);
+        const box = el('input');
+        box.type = 'checkbox';
+        box.dataset.task = task.id;
+        box.dataset.action = 'complete';
+        box.dataset.list = task.id;
+        const when = task.dueDate ? `${urgency === 'overdue' ? 'Overdue: ' : 'Due '}${task.dueDate}` : 'No due date';
+        item.append(box, el('span', '', `${task.title} \u00B7 ${subjects.get(task.listId)} \u00B7 ${when}`));
+        container.append(item);
+      }
+    });
+  }
+
+  function nextOffDate(workspace, listId, today) {
+    for (let date = addDays(today, 1), n = 0; n < 60; date = addDays(date, 1), n++) {
+      if (dayKind(workspace.school, date) === 'school'
+        && !workspace.school.daysOff.some((entry) => entry.listId === listId && entry.date === date)) return date;
+    }
+    return today;
   }
 
   function renderSettings(workspace) {
@@ -205,13 +279,13 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     }
   }
 
-  async function spend(listId, date) {
+  async function spend(listId, date, apply = dayRun) {
     const workspace = getWorkspace();
     const list = workspace.lists.find((entry) => entry.id === listId);
     const due = dayDetails(workspace, date, localDate()).subjects.find((s) => s.list.id === listId)?.deadlines ?? [];
     if (due.length && !await confirmAction('Deadline on this day',
       `"${due[0].title}" in ${list.name} is due on ${date}. Use a day off anyway?`, 'Use day off')) return;
-    dayRun((ws) => spendDayOff(ws, listId, date), 'Day off used.');
+    apply((ws) => spendDayOff(ws, listId, date), 'Day off used.');
   }
 
   function onClick(event) {
@@ -220,6 +294,10 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     const { action, list, date } = target.dataset;
     const today = localDate();
     if (action === 'plus') run((ws) => addWork(ws, list, today, 1), 'Work logged.');
+    else if (action === 'done') {
+      const remaining = todaySummary(getWorkspace(), today).subjects.find((s) => s.list.id === list)?.remaining ?? 0;
+      if (remaining > 0) run((ws) => addWork(ws, list, today, remaining), 'Target finished for today.');
+    } else if (action === 'quick-off') spend(list, byId(`off-date-${list}`).value, run);
     else if (action === 'minus') {
       if (target.getAttribute('aria-disabled') === 'true') return;
       run((ws) => addWork(ws, list, today, -1), 'Work removed.');
@@ -250,6 +328,30 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
   }
 
   byId('school-today').addEventListener('click', onClick);
+  byId('school-today').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const title = form.elements.title.value;
+    run((ws) => addTask(ws, { title, listId: form.dataset.list, dueDate: form.elements.due.value || null }),
+      'Assignment added.');
+  });
+  byId('upcoming').addEventListener('change', (event) => {
+    const box = event.target;
+    if (box.dataset.action !== 'complete') return;
+    run((ws) => updateTask(ws, box.dataset.task, { completed: true }), 'Assignment completed.');
+  });
+  byId('subject-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const raw = byId('new-subject-target').value.trim();
+    run((ws) => {
+      const added = addList(ws, byId('new-subject-name').value);
+      return setSubjectTarget(added, added.lists.at(-1).id, {
+        units: raw === '' ? Number.NaN : Number(raw),
+        unit: byId('new-subject-unit').value,
+      });
+    }, 'Subject added.');
+    if (byId('error').hidden) byId('subject-form').reset();
+  });
   byId('calendar').addEventListener('click', onClick);
   byId('day-body').addEventListener('click', onClick);
   byId('close-day').addEventListener('click', () => byId('day-dialog').close());
@@ -273,6 +375,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
       if (!workspace) return;
       renderSettings(workspace);
       renderToday(workspace);
+      renderUpcoming(workspace);
       renderCalendar(workspace);
       renderDay(workspace);
     },
