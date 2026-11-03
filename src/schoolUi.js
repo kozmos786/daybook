@@ -2,7 +2,7 @@ import { INBOX_ID, localDate, updateTask } from './model.js';
 import { addDays } from './dates.js';
 import { addWork, cancelDayOff, markHoliday, setSubjectTarget, setWorkLogged, spendDayOff, unmarkHoliday } from './schoolActions.js';
 import { dayDetails, dayKind, isSubject, monthGrid, targetOn, todaySummary } from './school.js';
-import { guideStarted, moveTask, nextMonday, startSchoolYear, subjectStyle, swapDueDates } from './guide.js';
+import { guideStarted, moveTask, nextMonday, presetFor, startSchoolYear, subjectStyle, swapDueDates } from './guide.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
   'September', 'October', 'November', 'December'];
@@ -174,13 +174,21 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     });
   }
 
+  function guideChoice() {
+    return { grade: Number(byId('grade').value), advanced: byId('advanced-math').checked };
+  }
+
   function renderGuide(workspace) {
-    const container = byId('guide');
-    const started = guideStarted(workspace);
-    container.hidden = started;
-    if (started || container.dataset.ready) return;
-    container.dataset.ready = '1';
-    byId('year-start').value = nextMonday(localDate());
+    const { grade, advanced } = guideChoice();
+    const subjects = presetFor(grade, advanced);
+    byId('guide-preview').textContent = `Includes: ${subjects.map((s) => `${subjectStyle(s.name).emoji} ${s.name}`).join(', ')}`;
+    const started = guideStarted(workspace, grade, advanced);
+    const start = byId('start-year');
+    start.textContent = started ? 'Already set up \u2728' : 'Start the school year';
+    if (started) start.setAttribute('aria-disabled', 'true');
+    else start.removeAttribute('aria-disabled');
+    const date = byId('year-start');
+    if (!date.value) date.value = nextMonday(localDate());
   }
 
   function nextOffDate(workspace, listId, today) {
@@ -372,8 +380,13 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
   });
   byId('upcoming').addEventListener('click', onClick);
   byId('start-year').addEventListener('click', () => {
-    run((ws) => startSchoolYear(ws, byId('year-start').value, localDate()), 'School year ready! \u2728');
+    const { grade, advanced } = guideChoice();
+    if (guideStarted(getWorkspace(), grade, advanced)) return;
+    run((ws) => startSchoolYear(ws, byId('year-start').value, localDate(), grade, advanced), 'School year ready! \u2728');
   });
+  for (const id of ['grade', 'advanced-math']) {
+    byId(id).addEventListener('change', () => { if (getWorkspace()) renderGuide(getWorkspace()); });
+  }
   byId('calendar').addEventListener('click', onClick);
   byId('day-body').addEventListener('click', onClick);
   byId('close-day').addEventListener('click', () => byId('day-dialog').close());

@@ -217,3 +217,8 @@ h1 span { color: #ff8fb8; }
 .calendar-table td { border-radius: 10px; border-color: var(--border); }
 .calendar-table .day-holiday { background: #ffe9f2; }
 .filters button[aria-pressed="true"] { background: #ece3ff; color: #5a3fb0; }
+.guide-fields { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
+.guide-fields > div { flex: 1 1 140px; }
+.guide-fields select, .guide-fields input { width: 100%; }
+.guide .check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.guide-preview { font-size: 13px; color: var(--muted); }

@@ -63,7 +63,7 @@ If another tab changes the workspace, this tab blocks further edits and asks you
 
 ## Student features
 
-Subjects and assignments come from a **preset school-year guide** (middle school): press **Start the school year**, pick the first Monday, and Daybook adds Math, English, Science, History and Spelling with daily targets and a weekly review due every Friday for 36 weeks. Existing subjects with the same names are kept. The look is soft and pastel, with an emoji per subject.
+Subjects and assignments come from a **preset school-year guide**: pick a **grade (1–12)**, press **Start the school year**, choose the first Monday, and Daybook adds that grade's five subjects with daily targets and a weekly review due every Friday for 36 weeks. Math follows a course sequence (Math, Pre-Algebra in 8, Algebra 1 in 9, Geometry, Algebra 2, Pre-Calculus); tick **Advanced math** to go one course ahead (Algebra 1 in grade 8, up to Calculus). High school adds course-specific science (Biology, Chemistry, Physics, Environmental Science), history/government, English and Writing. Existing subjects with the same names are kept, and you can run the guide again for another grade. The look is soft and pastel, with an emoji per subject.
 
 - **Change plan:** every upcoming assignment has a *Change plan* section to move its due date or swap due dates with another assignment.
 - Each subject card shows a progress bar, big **+1** and **Done for today** buttons, saved days off, and a **Use a day off** button (defaulting to the next school day, with a date picker).

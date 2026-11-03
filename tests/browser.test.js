@@ -329,9 +329,12 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await click('#list-navigation button:first-child');
     });
     await t.test('school year guide sets up subjects; assignments can be moved, swapped, and completed', async () => {
-      assert.equal(await evaluate(`document.querySelector('#guide').hidden`), false);
+      assert.equal(await evaluate(`document.querySelector('#start-year').getAttribute('aria-disabled')`), null);
+      await evaluate(`(() => { const g = document.querySelector('#grade'); g.value = '9'; g.dispatchEvent(new Event('change')); })()`);
+      assert.match(await evaluate(`document.querySelector('#guide-preview').textContent`), /Algebra 1/);
+      await evaluate(`(() => { const g = document.querySelector('#grade'); g.value = '6'; g.dispatchEvent(new Event('change')); })()`);
       await click('#start-year');
-      await waitFor(`document.querySelector('#guide').hidden`);
+      await waitFor(`document.querySelector('#start-year').getAttribute('aria-disabled') === 'true'`);
       const card = `[...document.querySelectorAll('.subject-row')].find(r => r.querySelector('strong').textContent === 'Science')`;
       await waitFor(`${card} !== undefined`);
       await evaluate(`${card}.querySelector('[data-action="done"]').click()`);
