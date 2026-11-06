@@ -107,34 +107,47 @@ function chess(stage) {
   let state;
   let selected = null;
   let targets = [];
-  let timer = null;
+  let history = [];
+  let thinking = false;
+  let requestId = 0;
+  let worker = null;
   const mode = el('label', { class: 'check' });
   const box = el('input', { type: 'checkbox', checked: true });
-  mode.append(box, ' Play against the computer (you are white)');
+  mode.append(box, ' Play against the computer');
   const level = el('select', {});
   level.setAttribute('aria-label', 'Computer level');
-  for (const [value, label] of [['1', 'Easy'], ['2', 'Medium'], ['3', 'Hard']]) level.append(el('option', { value }, label));
+  for (const [value, label] of [['1', 'Easy'], ['2', 'Medium'], ['3', 'Hard'], ['4', 'Expert (slow)']]) level.append(el('option', { value }, label));
   level.value = '2';
-  stage.append(mode, level);
+  const sideSelect = el('select', {});
+  sideSelect.setAttribute('aria-label', 'Your colour');
+  sideSelect.append(el('option', { value: 'w' }, 'Play white'), el('option', { value: 'b' }, 'Play black'));
+  const controls = el('div', { class: 'paint-tools' });
+  controls.append(level, sideSelect);
+  stage.append(mode, controls);
   const say = status(stage);
   const grid = el('div', { class: 'chess-grid', role: 'group' });
   grid.setAttribute('aria-label', 'Chess board');
   const squares = [];
-  for (let r = 0; r < 8; r += 1) {
-    for (let c = 0; c < 8; c += 1) {
-      const sq = el('button', { type: 'button', class: `chess-square ${(r + c) % 2 ? 'dark' : 'light'}` });
-      sq.addEventListener('click', () => click(r, c));
-      grid.append(sq);
-      squares.push(sq);
-    }
+  const coords = (i) => {
+    const row = Math.floor(i / 8);
+    const col = i % 8;
+    return sideSelect.value === 'b' && box.checked ? [7 - row, 7 - col] : [row, col];
+  };
+  for (let i = 0; i < 64; i += 1) {
+    const sq = el('button', { type: 'button', class: 'chess-square' });
+    sq.addEventListener('click', () => click(...coords(i)));
+    grid.append(sq);
+    squares.push(sq);
   }
   stage.prepend(grid);
   const color = (p) => (p === 'w' ? 'White' : 'Black');
+  const mySide = () => (box.checked ? sideSelect.value : null);
   function draw() {
     const result = chessStatus(state);
     squares.forEach((sq, i) => {
-      const r = Math.floor(i / 8);
-      const c = i % 8;
+      const [r, c] = coords(i);
+      sq.classList.toggle('dark', (r + c) % 2 === 1);
+      sq.classList.toggle('light', (r + c) % 2 === 0);
       const piece = state.board[r][c];
       sq.textContent = piece ? PIECES[piece] : '';
       sq.classList.toggle('selected', selected !== null && selected[0] === r && selected[1] === c);
@@ -146,20 +159,33 @@ function chess(stage) {
     else if (result === 'stalemate') say('Stalemate. It is a draw.');
     else say(`${color(state.turn)} to move${chessInCheck(state, state.turn) ? ' - check!' : ''}`);
   }
+  function applyBot(move) {
+    thinking = false;
+    if (move) { history.push(state); state = chessMove(state, move.from, move.to); }
+    draw();
+  }
   function botTurn() {
-    if (!box.checked || state.turn !== 'b' || ['checkmate', 'stalemate'].includes(chessStatus(state))) return;
+    const side = mySide();
+    if (!side || state.turn === side || ['checkmate', 'stalemate'].includes(chessStatus(state))) return;
+    thinking = true;
+    const id = (requestId += 1);
+    const depth = Number(level.value);
+    const snapshot = state;
     say('Computer is thinking...');
-    timer = setTimeout(() => {
-      timer = null;
-      const move = chessBestMove(state, Number(level.value));
-      if (move) state = chessMove(state, move.from, move.to);
-      draw();
-    }, 50);
+    const fallback = () => setTimeout(() => { if (id === requestId) applyBot(chessBestMove(snapshot, depth)); }, 50);
+    if (depth < 4 || typeof Worker === 'undefined') { fallback(); return; }
+    try {
+      worker ??= new Worker(new URL('./chessWorker.js', import.meta.url), { type: 'module' });
+      worker.onmessage = (event) => { if (event.data.id === requestId) applyBot(event.data.move); };
+      worker.onerror = () => { worker = null; if (id === requestId) fallback(); };
+      worker.postMessage({ id, state: snapshot, depth });
+    } catch { worker = null; fallback(); }
   }
   function click(r, c) {
     const result = chessStatus(state);
-    if (result === 'checkmate' || result === 'stalemate' || timer || (box.checked && state.turn === 'b')) return;
+    if (result === 'checkmate' || result === 'stalemate' || thinking || (mySide() && state.turn !== mySide())) return;
     if (selected && targets.some(([tr, tc]) => tr === r && tc === c)) {
+      history.push(state);
       state = chessMove(state, selected, [r, c]);
       selected = null;
       targets = [];
@@ -175,12 +201,37 @@ function chess(stage) {
     }
     draw();
   }
-  function reset() { clearTimeout(timer); timer = null; state = chessStart(); selected = null; targets = []; draw(); }
+  function reset() {
+    requestId += 1;
+    thinking = false;
+    history = [];
+    state = chessStart();
+    selected = null;
+    targets = [];
+    draw();
+    botTurn();
+  }
+  function undo() {
+    if (thinking) return;
+    const side = mySide();
+    let index = history.length - 1;
+    if (side) while (index >= 0 && history[index].turn !== side) index -= 1;
+    if (index < 0) return;
+    state = history[index];
+    history = history.slice(0, index);
+    selected = null;
+    targets = [];
+    draw();
+  }
   box.addEventListener('change', reset);
-  stage.append(el('p', { class: 'hint' }, 'You play white and move first. Click a piece, then a highlighted square. Castling and en passant work; pawns promote to a queen. Untick the box to play a friend on the same screen.'));
+  sideSelect.addEventListener('change', reset);
+  stage.append(el('p', { class: 'hint' }, 'Click a piece, then a highlighted square. Castling and en passant work; pawns promote to a queen. Untick the box to play a friend on the same screen.'));
+  const undoButton = el('button', { type: 'button', class: 'secondary' }, 'Undo');
+  undoButton.addEventListener('click', undo);
+  stage.append(undoButton);
   newGameButton(stage, reset);
   reset();
-  return () => clearTimeout(timer);
+  return () => { requestId += 1; worker?.terminate(); worker = null; };
 }
 
 function memory(stage) {

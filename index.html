@@ -14,6 +14,7 @@
   <nav class="top-tabs" aria-label="Sections">
     <button type="button" id="tab-planner" aria-pressed="true">&#128203; Planner</button>
     <button type="button" id="tab-games" aria-pressed="false">&#127922; Board games</button>
+    <label class="theme-picker" for="theme">Theme <select id="theme"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
   </nav>
   <section id="games" class="games" aria-labelledby="games-heading" hidden>
     <h1 id="games-heading">Board games <span>&#127922;</span></h1>
@@ -59,6 +60,7 @@
       </header>
       <div id="error" class="message error" role="alert" hidden></div>
       <p id="status" class="status-message" role="status" aria-live="polite"></p>
+      <div id="reminders" class="reminders" aria-label="Reminders" role="region" hidden></div>
       <noscript><p class="message error">JavaScript is required to use the planner. Enable it and reload.</p></noscript>
       <section class="school-section" aria-labelledby="school-heading">
         <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>

@@ -19,8 +19,8 @@ const browserPath = process.env.PLANNER_BROWSER || [
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function until(read, message) {
-  const deadline = Date.now() + 15_000;
+async function until(read, message, ms = 15_000) {
+  const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
     const result = await read();
     if (result) return result;
@@ -115,7 +115,7 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.text + ': ' + result.result.description);
       return result.result.value;
     };
-    const waitFor = (expression) => until(() => evaluate(expression), expression);
+    const waitFor = (expression, ms) => until(() => evaluate(expression), expression, ms);
     const click = (selector) => evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
     const closeDialog = (selector) => evaluate(`new Promise(resolve => {
       document.querySelector('#confirm-dialog').addEventListener('close', () => setTimeout(resolve, 0), { once: true });
@@ -367,6 +367,37 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
       await click('#tab-planner');
       assert.equal(await evaluate(`document.querySelector('.app').hidden`), false);
+    });
+    await t.test('reminders banner, theme choice, and chess side/undo/expert', async () => {
+      await click('#tab-planner');
+      const today = await evaluate(`new Date().toLocaleDateString('en-CA')`);
+      await fill('#task-title', 'Reminder probe');
+      await fill('#task-due', '2020-01-01');
+      await click('#save-task');
+      await waitFor(`!document.querySelector('#reminders').hidden && document.querySelector('#reminders').textContent.includes('Reminder probe')`);
+      assert.match(await evaluate(`document.querySelector('.reminder-overdue h2').textContent`), /Overdue/);
+      await click('#reminders .reminder-overdue button');
+      assert.equal(await evaluate(`document.activeElement.dataset.taskId !== undefined`), true);
+      assert.ok(today);
+      await evaluate(`(() => { const s = document.querySelector('#theme'); s.value = 'dark'; s.dispatchEvent(new Event('change')); })()`);
+      assert.equal(await evaluate(`document.documentElement.dataset.theme`), 'dark');
+      await evaluate(`(() => { const s = document.querySelector('#theme'); s.value = 'light'; s.dispatchEvent(new Event('change')); })()`);
+      assert.equal(await evaluate(`document.documentElement.dataset.theme`), 'light');
+      await click('#tab-games');
+      await evaluate(`document.querySelector('[data-game="chess"]').click()`);
+      await evaluate(`(() => { const s = document.querySelector('select[aria-label="Computer level"]'); s.value = '1'; })()`);
+      await evaluate(`(() => { const s = document.querySelector('select[aria-label="Your colour"]'); s.value = 'b'; s.dispatchEvent(new Event('change')); })()`);
+      await waitFor(`document.querySelector('.chess-square').getAttribute('aria-label').includes('White rook')`);
+      await waitFor(`[...document.querySelectorAll('.chess-square')].some(s => /White (pawn|knight)/.test(s.getAttribute('aria-label')) && /^[a-h][3-4]/.test(s.getAttribute('aria-label')))`);
+      await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'Undo').click()`);
+      await evaluate(`(() => { const s = document.querySelector('select[aria-label="Computer level"]'); s.value = '4'; })()`);
+      await evaluate(`(() => { const s = document.querySelector('select[aria-label="Your colour"]'); s.value = 'w'; s.dispatchEvent(new Event('change')); })()`);
+      await evaluate(`[...document.querySelectorAll('.chess-square')].find(s => s.getAttribute('aria-label') === 'e2 White pawn').click()`);
+      await evaluate(`[...document.querySelectorAll('.chess-square')].find(s => s.getAttribute('aria-label') === 'e4').click()`);
+      await waitFor(`/Black pawn|Black knight/.test([...document.querySelectorAll('.chess-square')].map(s => s.getAttribute('aria-label')).filter(l => /^[a-h][3-6] Black/.test(l)).join())`, 60000);
+      await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'Undo').click()`);
+      await waitFor(`document.querySelector('.game-status').textContent.startsWith('White to move')`);
+      await click('#tab-planner');
     });
     await t.test('mobile and desktop fit the viewport and controls can be used with a keyboard', async () => {
       for (const width of [390, 1280]) {

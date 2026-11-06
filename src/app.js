@@ -5,6 +5,8 @@ import {
 import { STORAGE_KEY, loadWorkspace, saveWorkspace, parseBackup, serializeWorkspace } from './storage.js';
 import { createSchoolUi } from './schoolUi.js';
 import { initGames } from './games.js';
+import { maybeNotify, reminderGroups, renderReminders } from './reminders.js';
+import { initTheme } from './theme.js';
 
 const byId = (id) => document.getElementById(id);
 let workspace = null;
@@ -174,6 +176,18 @@ function renderTasks() {
   }
 }
 
+function jumpToTask(taskId) {
+  selectedList = '';
+  selectedFilter = 'all';
+  render();
+  const box = document.querySelector(`#tasks input[data-task-id="${taskId}"]`);
+  if (box) { box.scrollIntoView({ block: 'center' }); box.focus(); }
+}
+
+function renderReminderBanner() {
+  renderReminders(byId('reminders'), reminderGroups(workspace, localDate()), jumpToTask);
+}
+
 function render() {
   const unavailable = workspace === null;
   byId('task-fields').disabled = unavailable;
@@ -192,6 +206,7 @@ function render() {
     renderNavigation();
     renderTasks();
     school.render();
+    renderReminderBanner();
   }
 }
 
@@ -342,8 +357,10 @@ const school = createSchoolUi({
 });
 
 initGames();
+initTheme(byId('theme'));
 
 try {
   workspace = loadWorkspace(window.localStorage);
 } catch (error) { showError(error); }
 render();
+if (workspace) maybeNotify(reminderGroups(workspace, localDate()), localDate());

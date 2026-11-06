@@ -10,6 +10,6 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "check": "node --check server.js && node --check src/model.js && node --check src/storage.js && node --check src/app.js && node --check src/dates.js && node --check src/school.js && node --check src/schoolActions.js && node --check src/schoolUi.js && node --check src/guide.js && node --check src/games.js && node --check src/gamesLogic.js"
+    "check": "node --check server.js && node --check src/model.js && node --check src/storage.js && node --check src/app.js && node --check src/dates.js && node --check src/school.js && node --check src/schoolActions.js && node --check src/schoolUi.js && node --check src/guide.js && node --check src/games.js && node --check src/gamesLogic.js && node --check src/chessWorker.js && node --check src/reminders.js && node --check src/theme.js"
   }
 }

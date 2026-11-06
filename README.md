@@ -109,3 +109,8 @@ Responsive phone/desktop layout and keyboard-accessible controls. Local-only ser
 
 The **Board games** tab (top left) opens a small play area: tic-tac-toe (vs the computer or a friend), chess (against a computer bot with Easy/Medium/Hard levels, or two players on one screen; castling, en passant and checkmate work), Connect Four, Memory match, Snake, and a Paint board (colours, brush size, eraser, save as PNG). Nothing is stored or sent anywhere.
 
+
+## Reminders, themes and chess options
+
+A banner at the top of the Planner shows overdue, due-today and due-tomorrow tasks (click one to jump to it) and the browser may ask to show one notification per day for overdue or due-today work. The **Theme** picker offers Auto, Light and Dark and is remembered on this device. In chess you can play white or black, pick Easy to Expert (Expert runs in a background worker), and Undo takes back your move and the computer's reply.
+

@@ -263,3 +263,60 @@ h1 span { color: #ff8fb8; }
 .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #c9b3f0; padding: 0; cursor: pointer; }
 .paint-tools button[aria-pressed="true"] { background: #ece3ff; font-weight: 700; }
 .paint-canvas { width: 100%; max-width: 640px; aspect-ratio: 8 / 5; background: #fff; border: 3px solid #d8c9f5; border-radius: 12px; touch-action: none; cursor: crosshair; }
+
+/* Reminders */
+.reminders { display: grid; gap: 10px; margin-bottom: 16px; }
+.reminder { border-radius: 18px; padding: 12px 16px; border: 2px solid transparent; }
+.reminder h2 { font-size: 14px; margin: 0 0 6px; }
+.reminder ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.reminder button { border-radius: 99px; border: 1px solid #0002; background: #fffc; color: inherit; font: inherit; font-size: 13px; padding: 4px 12px; cursor: pointer; }
+.reminder-more { font-size: 13px; align-self: center; }
+.reminder-overdue { background: #ffe1e1; border-color: #ff9a9a; color: #7a1f1f; }
+.reminder-today { background: #fff0d3; border-color: #ffc870; color: #6b4300; }
+.reminder-tomorrow { background: #e3f1ff; border-color: #9cc8f5; color: #1d4a78; }
+.theme-picker { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.theme-picker select { padding: 4px 8px; border-radius: 99px; }
+
+/* Dark theme */
+:root[data-theme="dark"] { --green: #b79cff; --muted: #a89fc4; --border: #3a3258; background: #17132a; color: #ece8fa; }
+[data-theme="dark"] body { background: linear-gradient(160deg, #17132a 0%, #1d1838 50%, #14223a 100%); background-attachment: fixed; }
+[data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select { background: #231d40; border-color: #4a4070; color: #ece8fa; }
+[data-theme="dark"] .sidebar { background: #1d1838cc; }
+[data-theme="dark"] .composer, [data-theme="dark"] .tasks-section { background: #1f1a3acc; }
+[data-theme="dark"] .school-section { background: linear-gradient(180deg, #1f1a3a, #241d44); }
+[data-theme="dark"] .guide { background: linear-gradient(135deg, #4a2a52, #2e2a5e); }
+[data-theme="dark"] .rule { background: #2a2040; border-color: #4a3a6a; }
+[data-theme="dark"] .subject-row { background: linear-gradient(135deg, #2f2757, #231d40); box-shadow: none; }
+[data-theme="dark"] .upcoming-item { background: linear-gradient(135deg, #2f2757, #231d40); box-shadow: none; }
+[data-theme="dark"] .upcoming-item.overdue { background: #4a2330; outline-color: #b3475f; }
+[data-theme="dark"] .upcoming-item.due-today { background: #4a3a1c; outline-color: #b38a3c; }
+[data-theme="dark"] .secondary, [data-theme="dark"] .icon-button, [data-theme="dark"] .top-tabs button { background: #231d40; color: #d4c6ff; border-color: #4a4070; }
+[data-theme="dark"] .secondary:hover { background: #2f2757; }
+[data-theme="dark"] .list-button { color: #cfc6ee; }
+[data-theme="dark"] .list-button[aria-current="page"], [data-theme="dark"] .filters button[aria-pressed="true"],
+[data-theme="dark"] .top-tabs button[aria-pressed="true"], [data-theme="dark"] .game-picker button[aria-pressed="true"],
+[data-theme="dark"] .paint-tools button[aria-pressed="true"] { background: #3a2f6a; color: #f1ecff; }
+[data-theme="dark"] .list-button:hover { background: #2a2350; }
+[data-theme="dark"] .list-count { background: #ffffff1a; }
+[data-theme="dark"] .list-tag, [data-theme="dark"] .count-badge { background: #2f2757; color: #d4c6ff; }
+[data-theme="dark"] .task-notes, [data-theme="dark"] .task-meta, [data-theme="dark"] .data-tools p, [data-theme="dark"] .completed-toggle,
+[data-theme="dark"] .main-footer, [data-theme="dark"] .empty-state h3 { color: #b9b0d6; }
+[data-theme="dark"] .task-actions button, [data-theme="dark"] .filters button { color: #cfc6ee; }
+[data-theme="dark"] .task-actions button:hover { background: #2f2757; }
+[data-theme="dark"] .overdue, [data-theme="dark"] .danger, [data-theme="dark"] .task-actions .danger { color: #ff9a9a; }
+[data-theme="dark"] .deadline { color: #ffc870; }
+[data-theme="dark"] .error { background: #3a1f28; border-color: #8a3f52; color: #ffc4cf; }
+[data-theme="dark"] dialog { background: #1f1a3a; color: #ece8fa; }
+[data-theme="dark"] .calendar-table .day-holiday { background: #4a2a52; }
+[data-theme="dark"] .calendar-table .day { color: inherit; }
+[data-theme="dark"] .change-plan summary { color: #d4c6ff; }
+[data-theme="dark"] .ttt-cell, [data-theme="dark"] .memory-card.up { background: #231d40; color: #d4c6ff; border-color: #4a4070; }
+[data-theme="dark"] .memory-card { background: #2f2757; border-color: #4a4070; color: #d4c6ff; }
+[data-theme="dark"] .memory-card.done { background: #1f4a3a; }
+[data-theme="dark"] .chess-square.light { background: #5a4a8a; }
+[data-theme="dark"] .chess-square.dark { background: #382c63; }
+[data-theme="dark"] .chess-square { color: #fff; }
+[data-theme="dark"] .chess-square.black-piece { color: #0d0820; }
+[data-theme="dark"] .chess-square.selected { background: #a8861e; }
+[data-theme="dark"] .skip-link { background: #231d40; }
+[data-theme="dark"] .reminder { filter: none; }
