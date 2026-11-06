@@ -114,3 +114,11 @@ The **Board games** tab (top left) opens a small play area: tic-tac-toe (vs the 
 
 A banner at the top of the Planner shows overdue, due-today and due-tomorrow tasks (click one to jump to it) and the browser may ask to show one notification per day for overdue or due-today work. The **Theme** picker offers Auto, Light and Dark and is remembered on this device. In chess you can play white or black, pick Easy to Expert (Expert runs in a background worker), and Undo takes back your move and the computer's reply.
 
+
+## Home, grades, schedule and break room
+
+- **Home** (opens first): widgets for today, reminders, subject progress, upcoming, grades, schedule forecast, days off, mini calendar, quick add, task list, log work, break room and a verse of the day (about 60 KJV verses, typed from memory, so check the wording; you can shuffle, pin, add, edit or delete). **Customize** shows/hides, resizes and reorders widgets (drag or Up/Down).
+- **Grades** (subject card): points per assignment with category, weighted or simple average, letter grades, quarters, unweighted 4.0 GPA, trend, what-if calculator and a printable/PNG report card. Scores cap at 100%; extra credit is a constant in `src/grades.js`.
+- **Schedule** (subject card): total lessons, weekday pace and optional goal date give planned and real-pace finish dates that skip weekends, holidays, break ranges and days off. Finish dates show on the Calendar.
+- **Break room**: a cartoon coffee shop with a 5/10/15 minute break timer. Beans are earned from meeting daily targets and visiting, and are spent on drinks, pastries and decorations (cosmetic only). Sound is synthesized and off by default.
+- Backups are now schema version 3; version 1 and 2 backups still import.

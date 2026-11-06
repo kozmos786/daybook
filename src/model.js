@@ -1,12 +1,18 @@
 import { isCalendarDate, localDate } from './dates.js';
 import { emptySchool, normalizeTargets, normalizeUnit, validateSchool } from './school.js';
+import { emptyGrades, validateGrades } from './grades.js';
+import { emptySchedules, validateSchedules } from './schedule.js';
+import { emptyCafe, emptyHub, emptyVerses, validateCafe, validateHub, validateVerses } from './extras.js';
 
 export { isCalendarDate, localDate };
 
 export const INBOX_ID = 'inbox';
 
 export function createWorkspace() {
-  return { version: 2, lists: [{ id: INBOX_ID, name: 'Inbox' }], tasks: [], school: emptySchool() };
+  return {
+    version: 3, lists: [{ id: INBOX_ID, name: 'Inbox' }], tasks: [], school: emptySchool(),
+    grades: emptyGrades(), schedules: emptySchedules(), hub: emptyHub(), verses: emptyVerses(), cafe: emptyCafe(),
+  };
 }
 
 function requireText(value, label) {
@@ -20,11 +26,11 @@ function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-// Accepts version 1 (no school data) and version 2, always returning version 2.
+// Accepts versions 1 (no school data), 2 and 3, always returning version 3.
 export function validateWorkspace(value) {
-  if (!isRecord(value) || (value.version !== 1 && value.version !== 2) ||
+  if (!isRecord(value) || ![1, 2, 3].includes(value.version) ||
       !Array.isArray(value.lists) || !Array.isArray(value.tasks)) {
-    throw new Error('Expected a Daybook backup (version 1 or 2) with lists and tasks.');
+    throw new Error('Expected a Daybook backup (version 1, 2 or 3) with lists and tasks.');
   }
   if (value.version === 1 && value.school !== undefined) {
     throw new Error('A version 1 backup cannot contain school data.');
@@ -74,7 +80,14 @@ export function validateWorkspace(value) {
     };
   });
   const school = validateSchool(value.version === 1 ? emptySchool() : value.school, lists);
-  return { version: 2, lists, tasks, school };
+  return {
+    version: 3, lists, tasks, school,
+    grades: validateGrades(value.grades, lists),
+    schedules: validateSchedules(value.schedules, lists),
+    hub: validateHub(value.hub),
+    verses: validateVerses(value.verses),
+    cafe: validateCafe(value.cafe),
+  };
 }
 
 export function addTask(workspace, { title, description = '', dueDate = null, listId = INBOX_ID }) {
@@ -124,6 +137,12 @@ export function deleteList(workspace, id) {
       logs: workspace.school.logs.filter((log) => log.listId !== id),
       daysOff: workspace.school.daysOff.filter((entry) => entry.listId !== id),
     },
+    grades: {
+      ...workspace.grades,
+      entries: workspace.grades.entries.filter((entry) => entry.listId !== id),
+      settings: Object.fromEntries(Object.entries(workspace.grades.settings).filter(([key]) => key !== id)),
+    },
+    schedules: workspace.schedules.filter((entry) => entry.listId !== id),
   });
 }
 

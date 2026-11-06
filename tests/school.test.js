@@ -157,10 +157,10 @@ test('deleting a subject keeps its tasks in Inbox and removes its school data', 
   const result = deleteList(workspace, id);
   assert.equal(result.tasks[0].listId, INBOX_ID);
   assert.equal(result.lists.length, 1);
-  assert.deepEqual(result.school, { holidays: [TUE], logs: [], daysOff: [] });
+  assert.deepEqual(result.school, { holidays: [TUE], logs: [], daysOff: [], breaks: [] });
 });
 
-test('version 1 data upgrades to version 2 and invalid school data is rejected', () => {
+test('older backups upgrade to version 3 and invalid school data is rejected', () => {
   const v1 = { version: 1, lists: [{ id: 'inbox', name: 'Inbox' }], tasks: [] };
   assert.deepEqual(validateWorkspace(v1), createWorkspace());
   assert.throws(() => validateWorkspace({ ...v1, school: { holidays: [], logs: [], daysOff: [] } }), /version 1/);

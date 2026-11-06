@@ -394,11 +394,8 @@ const GAMES = [
 ];
 
 export function initGames() {
-  const planner = document.querySelector('.app');
-  const area = document.getElementById('games');
   const picker = document.getElementById('game-picker');
   const stage = document.getElementById('game-stage');
-  const tabs = { planner: document.getElementById('tab-planner'), games: document.getElementById('tab-games') };
   let stop = null;
   let current = null;
 
@@ -412,20 +409,6 @@ export function initGames() {
     for (const button of picker.children) button.setAttribute('aria-pressed', String(button.dataset.game === id));
   }
 
-  function show(name) {
-    const games = name === 'games';
-    planner.hidden = games;
-    area.hidden = !games;
-    for (const [key, tab] of Object.entries(tabs)) tab.setAttribute('aria-pressed', String(key === name));
-    if (games) { if (!current) open(GAMES[0].id); } else {
-      if (stop) stop();
-      stop = null;
-      current = null;
-      stage.replaceChildren();
-      for (const button of picker.children) button.setAttribute('aria-pressed', 'false');
-    }
-  }
-
   for (const game of GAMES) {
     const button = el('button', { type: 'button', class: 'secondary' }, game.label);
     button.dataset.game = game.id;
@@ -433,6 +416,15 @@ export function initGames() {
     button.addEventListener('click', () => open(game.id));
     picker.append(button);
   }
-  tabs.planner.addEventListener('click', () => show('planner'));
-  tabs.games.addEventListener('click', () => show('games'));
+
+  return {
+    enter() { if (!current) open(GAMES[0].id); },
+    leave() {
+      if (stop) stop();
+      stop = null;
+      current = null;
+      stage.replaceChildren();
+      for (const button of picker.children) button.setAttribute('aria-pressed', 'false');
+    },
+  };
 }

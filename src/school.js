@@ -9,7 +9,15 @@ function isRecord(value) {
 }
 
 export function emptySchool() {
-  return { holidays: [], logs: [], daysOff: [] };
+  return { holidays: [], logs: [], daysOff: [], breaks: [] };
+}
+
+export function inBreak(school, date) {
+  return (school.breaks ?? []).some((entry) => entry.from <= date && date <= entry.to);
+}
+
+export function isNoSchool(school, date) {
+  return school.holidays.includes(date) || inBreak(school, date);
 }
 
 export function isSubject(list) {
@@ -52,7 +60,7 @@ export function targetOn(list, date) {
 }
 
 export function dayKind(school, date) {
-  if (school.holidays.includes(date)) return 'holiday';
+  if (isNoSchool(school, date)) return 'holiday';
   const day = weekday(date);
   return day === 0 || day === 6 ? 'weekend' : 'school';
 }
@@ -86,7 +94,7 @@ export function subjectStats(list, school) {
   }
   // A day off spent on a date that later became a holiday is returned, not counted.
   const spent = school.daysOff.filter((entry) =>
-    entry.listId === list.id && !school.holidays.includes(entry.date)).length;
+    entry.listId === list.id && !isNoSchool(school, entry.date)).length;
   return { earned, spent, balance: earned - spent, carry: pool };
 }
 
@@ -133,7 +141,18 @@ export function validateSchool(value, lists) {
     return { id: entry.id, listId: entry.listId, date: entry.date };
   });
 
-  const school = { holidays: holidays.sort(), logs, daysOff };
+  const breakIds = new Set();
+  const breaks = (value.breaks ?? []).map((entry) => {
+    if (!isRecord(entry) || typeof entry.id !== 'string' || !entry.id.trim() || breakIds.has(entry.id) ||
+        !isCalendarDate(entry.from) || !isCalendarDate(entry.to) || entry.from > entry.to ||
+        typeof entry.label !== 'string' || entry.label.length > 60) {
+      throw new Error('A break needs a unique ID, a start date on or before its end date, and a short label.');
+    }
+    breakIds.add(entry.id);
+    return { id: entry.id, from: entry.from, to: entry.to, label: entry.label.trim() };
+  }).sort((a, b) => a.from.localeCompare(b.from));
+
+  const school = { holidays: holidays.sort(), logs, daysOff, breaks };
   for (const list of lists) {
     if (subjectStats(list, school).balance < 0) {
       throw new Error(`More days off are spent than earned for "${list.name}", so this change is not allowed.`);

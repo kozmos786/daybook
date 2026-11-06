@@ -5,6 +5,11 @@ import {
 import { STORAGE_KEY, loadWorkspace, saveWorkspace, parseBackup, serializeWorkspace } from './storage.js';
 import { createSchoolUi } from './schoolUi.js';
 import { initGames } from './games.js';
+import { initTabs } from './tabs.js';
+import { createGradesUi } from './gradesUi.js';
+import { createScheduleUi } from './scheduleUi.js';
+import { createCafeUi } from './cafeUi.js';
+import { createHubUi } from './hubUi.js';
 import { maybeNotify, reminderGroups, renderReminders } from './reminders.js';
 import { initTheme } from './theme.js';
 
@@ -207,6 +212,10 @@ function render() {
     renderTasks();
     school.render();
     renderReminderBanner();
+    grades.render();
+    schedule.render();
+    cafe.render();
+    hub.render();
   }
 }
 
@@ -250,8 +259,9 @@ byId('delete-list').addEventListener('click', async () => {
   const id = selectedList;
   const list = workspace.lists.find((entry) => entry.id === id);
   const hasSchoolData = workspace.school.logs.some((log) => log.listId === id)
-    || workspace.school.daysOff.some((entry) => entry.listId === id) || list.targets;
-  const extra = hasSchoolData ? ' Its school target, logged work, and saved days off will be erased.' : '';
+    || workspace.school.daysOff.some((entry) => entry.listId === id) || list.targets
+    || workspace.grades.entries.some((entry) => entry.listId === id) || workspace.schedules.some((entry) => entry.listId === id);
+  const extra = hasSchoolData ? ' Its school target, logged work, saved days off, grades, and schedule will be erased.' : '';
   if (!await confirmAction('Delete list?', `Delete "${list.name}"? Its tasks will move to Inbox, not be deleted.${extra}`, 'Delete list')) return;
   try {
     commit(deleteList(workspace, id));
@@ -338,11 +348,12 @@ window.addEventListener('storage', (event) => {
     workspace = null;
     if (byId('confirm-dialog').open) byId('confirm-dialog').close('cancel');
     school.closeDay();
+    for (const id of ['grades-dialog', 'report-dialog', 'schedule-dialog']) if (byId(id).open) byId(id).close();
     render();
   }
 });
 function refreshDate() {
-  if (workspace && renderedDay !== localDate()) { renderTasks(); school.render(); }
+  if (workspace && renderedDay !== localDate()) { renderTasks(); school.render(); hub.render(); cafe.render(); }
 }
 window.addEventListener('focus', refreshDate);
 document.addEventListener('visibilitychange', () => {
@@ -354,9 +365,28 @@ const school = createSchoolUi({
   getWorkspace: () => workspace,
   getSelectedList: () => selectedList,
   commit, confirmAction, showError, announce, refresh: render,
+  openGrades: (id, name) => grades.open(id, name),
+  openSchedule: (id) => schedule.open(id),
 });
-
-initGames();
+const shared = { getWorkspace: () => workspace, commit, showError, announce, refresh: render };
+const grades = createGradesUi({ ...shared, confirmAction });
+const schedule = createScheduleUi(shared);
+let tabs = null;
+const games = initGames();
+const cafe = createCafeUi({ ...shared, openGames: () => tabs.show('games') });
+const hub = createHubUi({
+  ...shared,
+  actions: {
+    openTab: (name) => tabs.show(name),
+    open(target) {
+      if (target === 'report') { grades.openReport(); return; }
+      tabs.show(target === 'cafe' ? 'cafe' : 'planner');
+      if (target === 'calendar' && byId('calendar').hidden) byId('toggle-calendar').click();
+    },
+  },
+});
+byId('open-report').addEventListener('click', () => grades.openReport());
+tabs = initTabs({ games, cafe });
 initTheme(byId('theme'));
 
 try {

@@ -3,6 +3,8 @@ import { addDays } from './dates.js';
 import { addWork, cancelDayOff, markHoliday, setSubjectTarget, setWorkLogged, spendDayOff, unmarkHoliday } from './schoolActions.js';
 import { dayDetails, dayKind, isSubject, monthGrid, targetOn, todaySummary } from './school.js';
 import { guideStarted, moveTask, nextMonday, presetFor, startSchoolYear, subjectStyle, swapDueDates } from './guide.js';
+import { subjectSummary } from './grades.js';
+import { finishDates } from './schedule.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
   'September', 'October', 'November', 'December'];
@@ -39,7 +41,7 @@ function rebuild(container, build) {
   match?.focus();
 }
 
-export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmAction, showError, announce, refresh }) {
+export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmAction, showError, announce, refresh, openGrades, openSchedule }) {
   let calendarOpen = false;
   let view = null;
   let openDate = null;
@@ -88,6 +90,8 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
         info.append(bar);
         info.append(el('span', 'subject-saved',
           `Saved days off: ${subject.balance} (${subject.carry} extra carried)`));
+        const latest = subjectSummary(workspace.grades, id);
+        if (latest) info.append(el('span', `grade-chip grade-${latest.tone}`, `Grade: ${latest.percent}% ${latest.letter}`));
         const controls = el('div', 'subject-controls');
         const minus = button('\u2212', 'minus', { list: id }, 'icon-button');
         minus.setAttribute('aria-label', `Remove one ${subject.unit} from ${subject.list.name}`);
@@ -101,6 +105,9 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
           controls.append(done);
         }
         row.append(info, controls);
+        const more = el('div', 'subject-more');
+        more.append(button('\uD83D\uDCCA Grades', 'grades', { list: id }, 'secondary'), button('\uD83D\uDCC5 Schedule', 'schedule', { list: id }, 'secondary'));
+        row.append(more);
         if (subject.balance > 0) {
           const off = el('div', 'quick-off');
           const date = el('input');
@@ -225,6 +232,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     const today = localDate();
     view ??= { year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) };
     const weeks = monthGrid(workspace, view.year, view.month);
+    const finishes = finishDates(workspace, today);
     rebuild(container, () => {
       const nav = el('div', 'calendar-nav');
       const prev = button('\u2039', 'prev-month', {}, 'icon-button');
@@ -254,6 +262,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
           if (cell.kind === 'weekend') label.push('weekend');
           if (cell.dayOffs.length) { marks.push(`Off: ${cell.dayOffs.join(', ')}`); label.push(`day off for ${cell.dayOffs.join(', ')}`); }
           if (cell.deadlines.length) { marks.push(`${cell.deadlines.length} due`); label.push(`${cell.deadlines.length} deadlines`); }
+          if (finishes.has(cell.date)) { marks.push(`\uD83C\uDFC1 ${finishes.get(cell.date).join(', ')}`); label.push(`projected finish for ${finishes.get(cell.date).join(', ')}`); }
           const day = button(cell.date.slice(8).replace(/^0/, ''), 'open-day', { date: cell.date },
             `day day-${cell.kind}${cell.inMonth ? '' : ' outside'}${cell.date === today ? ' today' : ''}`);
           day.setAttribute('aria-label', label.join(', '));
@@ -333,7 +342,9 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     if (!target) return;
     const { action, list, date } = target.dataset;
     const today = localDate();
-    if (action === 'plus') run((ws) => addWork(ws, list, today, 1), 'Work logged.');
+    if (action === 'grades') openGrades(list);
+    else if (action === 'schedule') openSchedule(list);
+    else if (action === 'plus') run((ws) => addWork(ws, list, today, 1), 'Work logged.');
     else if (action === 'done') {
       const remaining = todaySummary(getWorkspace(), today).subjects.find((s) => s.list.id === list)?.remaining ?? 0;
       if (remaining > 0) run((ws) => addWork(ws, list, today, remaining), 'Target finished for today.');
@@ -377,6 +388,11 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
     const box = event.target;
     if (box.dataset.action !== 'complete') return;
     run((ws) => updateTask(ws, box.dataset.task, { completed: true }), 'Assignment completed.');
+    const task = getWorkspace().tasks.find((entry) => entry.id === box.dataset.task);
+    if (task?.completed) {
+      confirmAction('Log a grade?', `Nice work on "${task.title}". Do you want to log a grade for it?`, 'Log grade')
+        .then((yes) => { if (yes) openGrades(task.listId, task.title); });
+    }
   });
   byId('upcoming').addEventListener('click', onClick);
   byId('start-year').addEventListener('click', () => {

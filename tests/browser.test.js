@@ -133,8 +133,11 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await send('Page.reload', { ignoreCache: true });
       await sleep(150);
       await waitFor(`document.readyState === 'complete' && document.querySelector('#task-fields') !== null`);
+      await click('#tab-planner');
     };
     await waitFor(`document.querySelector('#task-fields')?.disabled === false && document.querySelector('.list-button') !== null`);
+    assert.equal(await evaluate(`document.querySelector('#home').hidden`), false);
+    await click('#tab-planner');
     await t.test('create and edit a task, then reload persisted data', async () => {
       await fill('#task-title', 'Plan the weekend');
       await fill('#task-description', 'Pick one good thing.');
@@ -352,6 +355,10 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await waitFor(`document.querySelector('#status').textContent === 'Due dates swapped.'`);
       await evaluate(`document.querySelector('#upcoming input[type="checkbox"]').click()`);
       await waitFor(`document.querySelector('#status').textContent === 'Assignment completed.'`);
+      await waitFor(`document.querySelector('#confirm-dialog').open`);
+      assert.match(await evaluate(`document.querySelector('#confirm-title').textContent`), /Log a grade/);
+      await evaluate(`document.querySelector('#confirm-dialog button[value="cancel"]').click()`);
+      await waitFor(`!document.querySelector('#confirm-dialog').open`);
       assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
     });
     await t.test('board games tab opens games, plays tic-tac-toe, and returns to the planner', async () => {
@@ -397,6 +404,47 @@ test('real browser: tasks, file imports, recovery, responsive layout, and keyboa
       await waitFor(`/Black pawn|Black knight/.test([...document.querySelectorAll('.chess-square')].map(s => s.getAttribute('aria-label')).filter(l => /^[a-h][3-6] Black/.test(l)).join())`, 60000);
       await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'Undo').click()`);
       await waitFor(`document.querySelector('.game-status').textContent.startsWith('White to move')`);
+      await click('#tab-planner');
+    });
+    await t.test('home hub, grades, schedule, break room and layout customizing work end to end', async () => {
+      await click('#tab-planner');
+      await evaluate(`document.querySelector('#subject-settings') && document.querySelector('[data-action="grades"]').click()`);
+      await waitFor(`document.querySelector('#grades-dialog').open`);
+      await fill('#grade-name', 'Quiz 1');
+      await fill('#grade-earned', '9');
+      await fill('#grade-possible', '10');
+      await evaluate(`document.querySelector('.grade-form').requestSubmit()`);
+      await waitFor(`document.querySelector('.grade-item') !== null`);
+      assert.equal((await stored()).grades.entries.length, 1);
+      assert.match(await evaluate(`document.querySelector('#grades-body .grade-big').textContent`), /90% A-/);
+      await evaluate(`document.querySelector('#grades-close').click()`);
+      assert.match(await evaluate(`document.querySelector('.grade-chip').textContent`), /90%/);
+
+      await evaluate(`document.querySelector('[data-action="schedule"]').click()`);
+      await waitFor(`document.querySelector('#schedule-dialog').open`);
+      await fill('#sch-total', '20');
+      await evaluate(`document.querySelector('.schedule-form').requestSubmit()`);
+      await waitFor(`document.querySelector('.forecast') !== null`);
+      assert.equal((await stored()).schedules[0].total, 20);
+      assert.match(await evaluate(`document.querySelector('.forecast').textContent`), /Planned pace finish/);
+      await evaluate(`document.querySelector('#schedule-close').click()`);
+
+      await click('#tab-home');
+      assert.equal(await evaluate(`document.querySelector('.app').hidden`), true);
+      const widgets = await evaluate(`[...document.querySelectorAll('.widget')].map(w => w.dataset.widget)`);
+      assert.equal(widgets.length, 13);
+      assert.match(await evaluate(`document.querySelector('[data-widget="schedule"]').textContent`), /\//);
+      await click('#home-customize-toggle');
+      await evaluate(`document.querySelector('[data-move="today-1"]').click()`);
+      await waitFor(`document.querySelector('.widget').dataset.widget === 'reminders'`);
+      assert.equal((await stored()).hub.layout[0].id, 'reminders');
+      await click('#home-customize-toggle');
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= window.innerWidth`), true);
+
+      await click('#tab-cafe');
+      assert.equal((await stored()).cafe.visits.length, 1);
+      await evaluate(`document.querySelector('[data-item="latte"]').click()`);
+      await waitFor(`document.querySelector('#cafe-root .error')?.textContent.includes('more bean')`);
       await click('#tab-planner');
     });
     await t.test('mobile and desktop fit the viewport and controls can be used with a keyboard', async () => {

@@ -35,6 +35,10 @@ export function addDays(date, days) {
   return format(result);
 }
 
+export function daysBetween(from, to) {
+  return Math.round((toUtc(to) - toUtc(from)) / 86_400_000);
+}
+
 export function monthStart(year, month) {
   return `${pad(year, 4)}-${pad(month, 2)}-01`;
 }

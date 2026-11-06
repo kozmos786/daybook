@@ -64,7 +64,7 @@ export function startSchoolYear(workspace, start, today, grade = 6, advanced = f
       });
     }
   }
-  return next;
+  return next.grades.yearStart ? next : { ...next, grades: { ...next.grades, yearStart: start } };
 }
 
 export function moveTask(workspace, taskId, dueDate) {

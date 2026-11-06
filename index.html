@@ -7,22 +7,38 @@
   <title>Daybook - Personal task planner</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="src/styles.css">
+  <link rel="stylesheet" href="src/features.css">
   <script type="module" src="src/app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#task-title">Skip to new task</a>
   <nav class="top-tabs" aria-label="Sections">
-    <button type="button" id="tab-planner" aria-pressed="true">&#128203; Planner</button>
+    <button type="button" id="tab-home" aria-pressed="true">&#127968; Home</button>
+    <button type="button" id="tab-planner" aria-pressed="false">&#128203; Planner</button>
     <button type="button" id="tab-games" aria-pressed="false">&#127922; Board games</button>
+    <button type="button" id="tab-cafe" aria-pressed="false">&#9749; Break room</button>
     <label class="theme-picker" for="theme">Theme <select id="theme"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
   </nav>
+  <section id="home" class="home" aria-labelledby="home-heading">
+    <div class="home-head">
+      <div><p class="eyebrow" id="home-date"></p><h1 id="home-heading">Home <span>&#127968;</span></h1></div>
+      <button type="button" id="home-customize-toggle" class="secondary" aria-expanded="false" aria-controls="home-customize">Customize</button>
+    </div>
+    <div id="home-customize" class="home-customize" hidden></div>
+    <div id="home-grid" class="home-grid"></div>
+  </section>
+  <section id="cafe" class="cafe" aria-labelledby="cafe-heading" hidden>
+    <h1 id="cafe-heading">Break room <span>&#9749;</span></h1>
+    <p class="subtitle">Earn beans by hitting your daily targets, then treat yourself. Beans are just for fun.</p>
+    <div id="cafe-root"></div>
+  </section>
   <section id="games" class="games" aria-labelledby="games-heading" hidden>
     <h1 id="games-heading">Board games <span>&#127922;</span></h1>
     <p class="subtitle">Take a little break. Pick a game.</p>
     <div id="game-picker" class="game-picker" role="group" aria-label="Choose a game"></div>
     <div id="game-stage" class="game-stage"></div>
   </section>
-  <div class="app">
+  <div class="app" hidden>
     <aside class="sidebar" aria-label="Workspace">
       <a class="brand" href="./" aria-label="Daybook home"><span class="brand-mark" aria-hidden="true">D</span>daybook<span class="brand-dot">.</span></a>
       <p class="eyebrow">A LITTLE SPACE TO GET THINGS DONE</p>
@@ -63,8 +79,9 @@
       <div id="reminders" class="reminders" aria-label="Reminders" role="region" hidden></div>
       <noscript><p class="message error">JavaScript is required to use the planner. Enable it and reload.</p></noscript>
       <section class="school-section" aria-labelledby="school-heading">
-        <div class="section-heading"><h2 id="school-heading">School today</h2><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></div>
+        <div class="section-heading"><h2 id="school-heading">School today</h2><span class="heading-buttons"><button type="button" id="open-report" class="secondary">Report card</button><button type="button" id="toggle-calendar" class="secondary" aria-expanded="false" aria-controls="calendar">Calendar</button></span></div>
         <div id="calendar" hidden></div>
+        <div id="breaks" class="breaks" hidden></div>
         <p class="rule">Do your daily target. Every full target of extra work earns 1 day off (double on weekends and holidays).</p>
         <div id="guide" class="guide">
           <h3>&#127752; Your school year guide</h3>
@@ -114,6 +131,23 @@
       <footer class="main-footer"><span>ONE THING AT A TIME.</span><span>Back up your tasks before clearing browser data.</span></footer>
     </main>
   </div>
+  <dialog id="grades-dialog" aria-labelledby="grades-title">
+    <h2 id="grades-title"></h2>
+    <div id="grades-error" class="message error" role="alert" hidden></div>
+    <div id="grades-body"></div>
+    <div class="dialog-actions"><button type="button" id="grades-close" class="primary">Close</button></div>
+  </dialog>
+  <dialog id="report-dialog" aria-labelledby="report-title">
+    <h2 id="report-title">Report card</h2>
+    <div id="report-body"></div>
+    <div class="dialog-actions"><button type="button" id="report-print" class="secondary">Print</button><button type="button" id="report-png" class="secondary">Save as image</button><button type="button" id="report-close" class="primary">Close</button></div>
+  </dialog>
+  <dialog id="schedule-dialog" aria-labelledby="schedule-title">
+    <h2 id="schedule-title"></h2>
+    <div id="schedule-error" class="message error" role="alert" hidden></div>
+    <div id="schedule-body"></div>
+    <div class="dialog-actions"><button type="button" id="schedule-close" class="primary">Close</button></div>
+  </dialog>
   <dialog id="day-dialog" aria-labelledby="day-title">
     <h2 id="day-title"></h2>
     <div id="day-error" class="message error" role="alert" hidden></div>
