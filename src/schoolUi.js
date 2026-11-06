@@ -394,6 +394,7 @@ export function createSchoolUi({ getWorkspace, getSelectedList, commit, confirmA
   byId('toggle-calendar').addEventListener('click', () => {
     calendarOpen = !calendarOpen;
     renderCalendar(getWorkspace());
+    if (calendarOpen) byId('calendar').scrollIntoView({ block: 'nearest' });
   });
   byId('subject-settings').addEventListener('submit', (event) => {
     event.preventDefault();
