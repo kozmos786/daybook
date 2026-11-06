@@ -105,3 +105,6 @@
   #report-dialog { position: static; display: block; color: #000; background: #fff; border: 0; }
   #report-dialog .dialog-actions { display: none; }
 }
+
+.save-note { margin: 0; font-size: .8rem; opacity: .75; }
+

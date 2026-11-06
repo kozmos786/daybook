@@ -37,6 +37,17 @@ function announce(message) {
 function commit(candidate) {
   saveWorkspace(window.localStorage, candidate);
   workspace = candidate;
+  const note = document.getElementById('save-note');
+  if (note) note.textContent = `Saved ✓ ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+}
+
+async function protectStorage() {
+  const note = document.getElementById('save-note');
+  try {
+    if (navigator.storage?.persist && !(await navigator.storage.persisted()) && !(await navigator.storage.persist()) && note) {
+      note.textContent += ' · Browser may clear it; export a backup now and then';
+    }
+  } catch { /* persistence request is best effort */ }
 }
 
 function element(tag, className, text) {
@@ -393,4 +404,5 @@ try {
   workspace = loadWorkspace(window.localStorage);
 } catch (error) { showError(error); }
 render();
+protectStorage();
 if (workspace) maybeNotify(reminderGroups(workspace, localDate()), localDate());
